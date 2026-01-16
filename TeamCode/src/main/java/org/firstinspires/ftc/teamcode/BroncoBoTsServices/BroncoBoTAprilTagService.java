@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.broncoBot.BroncoBoTsServices;
+package org.firstinspires.ftc.teamcode.BroncoBoTsServices;
 
 import android.util.Size;
 
@@ -23,7 +23,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
  */
 public class BroncoBoTAprilTagService {
 
-    private final VisionPortal visionPortal;
+    public final VisionPortal visionPortal;
     private final AprilTagProcessor aprilTagProcessor;
 
     public BroncoBoTAprilTagService(HardwareMap hardwareMap) {
@@ -31,12 +31,15 @@ public class BroncoBoTAprilTagService {
         // 1) Create processor
         aprilTagProcessor = new AprilTagProcessor.Builder()
                 .setDrawTagOutline(true)
+                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
                 .build();
 
         // 2) Create VisionPortal using webcam named "webcam1"
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .setCameraResolution(new Size(1280,720))
+                .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
+                .enableLiveView(true)
                 .addProcessor(aprilTagProcessor)
                 .build();
     }
@@ -97,7 +100,7 @@ public class BroncoBoTAprilTagService {
          * Returns |Z| so it is always positive.
          */
         public double getDistanceMeters() {
-            return Math.abs(zMeters);
+            return Math.abs(this.yMeters);
         }
     }
 }

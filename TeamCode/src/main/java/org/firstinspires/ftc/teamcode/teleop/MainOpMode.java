@@ -10,12 +10,19 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.broncoBot.BroncoBoTsServices.BroncoBoTAprilTagService;
+import org.firstinspires.ftc.teamcode.BroncoBoTsServices.BroncoBoTAprilTagService;
 
 @TeleOp(name = "ManualDrive", group = "Iterative OpMode")
 public class MainOpMode extends OpMode {
 
+    // Test comment to try push wirelessly from Android Studio
     // ********** DRIVE **********
     private DcMotor frontRight;
     private DcMotor frontLeft;
@@ -26,8 +33,9 @@ public class MainOpMode extends OpMode {
     private DcMotor intakeMotor;        // "IntakeMotor"
     private DcMotor shooterMotor;         // "shooterMotor"
     private DcMotor intakeRampMotor;    // "RampMotor"
-    private DcMotor stageMotor;   // Stage Motor
-    private Servo shooterGate;      // ShooterGate
+    private DcMotor stageMotor;   // stageMotor
+    private Servo shooterGate;      // shooterGate
+    private Servo hoodAdjuster;     // hoodAdjuster
 
     // ********** IMU / FIELD-CENTRIC **********
     private IMU imu;
@@ -42,6 +50,7 @@ public class MainOpMode extends OpMode {
     private boolean startWasPressed = false;
     private boolean parkingLatched  = false;
     private double startPressedTime = 0.0;
+    private double distanceToTag = 0.0;
 
     // ********** SHOOTER CONSTANTS **********
     // Target velocity in ticks per second
@@ -62,19 +71,20 @@ public class MainOpMode extends OpMode {
     private BroncoBoTAprilTagService tagService;
 
     // Single tag ID of interest (change as needed)
-    private static final int TAG_ID_OF_INTEREST = 20;
+    private static final int TAG_ID_OF_INTEREST = 20;  // 20 - BLUE, 24 - RED
 
     // ********** END OF VARIABLES **********
 
     @Override
     public void init() {
         HardwareMap hw = hardwareMap;
-
         initDrive(hw);
         initMechanisms(hw);
         initImu(hw);
         initVision(hw);
 
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
         telemetry.addData("Status", "Initialized");
         telemetry.update();
     }
@@ -95,16 +105,19 @@ public class MainOpMode extends OpMode {
         double leftTrigger  = gamepad1.left_trigger;   // shoot + auto align
         double rightTrigger = gamepad1.right_trigger;  // stage + intake assist
         boolean leftBumper  = gamepad1.left_bumper;    // intake + ramp
-        boolean leftBumper_CNTRL2 = gamepad2.left_bumper;
+        boolean leftBumper_CNTRL2 = gamepad2.left_bumper; // intake
+        boolean rightBumper_CNTRL2 = gamepad2.right_bumper; // Gate Open / Close
+        boolean downButton = gamepad1.dpad_down; // Gate open / close
 
         boolean finalIntake = leftBumper || leftBumper_CNTRL2;
+        boolean gateControl = rightBumper_CNTRL2 || downButton;
 
 
         // Shooter + tag alignment returns desired auto-rotation contribution
         double autoRotate = updateShooterAndTag(leftTrigger, dt);
 
         // Intake + stage motors (and ramp)
-        updateIntakeStage(finalIntake, rightTrigger);
+        updateIntakeStage(finalIntake, rightTrigger, gateControl);
 
         // Field-centric drive
         driveFieldCentric(x, y, rx, autoRotate);
@@ -147,24 +160,24 @@ public class MainOpMode extends OpMode {
     }
 
     private void initMechanisms(HardwareMap hw) {
-        shooterMotor    = hw.get(DcMotor.class, "shooterMotor");
-        intakeMotor     = hw.get(DcMotor.class,   "intakeMotor");
-        intakeRampMotor = hw.get(DcMotor.class,   "intakeRampMotor");
-        shooterGate       = hw.get(Servo.class,     "shooterGate");
-
+        shooterMotor = hw.get(DcMotor.class, "shooterMotor");
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        // shooterMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
 
-        // shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
+        intakeMotor = hw.get(DcMotor.class,   "intakeMotor");
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        intakeRampMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        intakeRampMotor = hw.get(DcMotor.class,   "intakeRampMotor");
+        intakeRampMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeRampMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        // shooterGate.scaleRange(0.0, 0.5);
-        shooterGate.setPosition(0.5);
+        shooterGate = hw.get(Servo.class,     "shooterGate");
+        shooterGate.setDirection(Servo.Direction.FORWARD);
+
+        stageMotor = hw.get(DcMotor.class, "stageMotor");
+        stageMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        stageMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     private void initImu(HardwareMap hw) {
@@ -237,20 +250,14 @@ public class MainOpMode extends OpMode {
     private double updateShooterAndTag(double leftTrigger, double dt) {
         double autoRotate = 0.0;
 
-        if (leftTrigger <= 0.05) {
-            // Shooter idle
-            shooterTargetVelocity = 0.0;
-            // shooterMotor.setVelocity(200);
-            shooterGate.setPosition(0.5);
-            return 0.0;
-        }
+
 
         // 1) Get tag pose
         BroncoBoTAprilTagService.TagPose pose = tagService.getTagPose(TAG_ID_OF_INTEREST);
 
         if (pose != null) {
             // Distance is Z only (forward depth)
-            double distanceMeters = pose.getDistanceMeters();   // |z|
+            distanceToTag = pose.getDistanceMeters();   // |z|
 
             // Distance -> shooter velocity (ticks / sec)
             // shooterTargetVelocity = mapDistanceToShooterVelocity(distanceMeters);
@@ -258,16 +265,16 @@ public class MainOpMode extends OpMode {
             // shooterTargetVelocity = TARGET_VELOCITY; // ticks/sec
 
             // Distance -> hood servo position
-            double hoodPos = mapDistanceToHoodPosition(distanceMeters);
+            double hoodPos = mapDistanceToHoodPosition(distanceToTag);
             // hoodServo.setPosition(hoodPos);
             // double currentVelocity = shooterMotor.getVelocity(); // ticks / second
 
             double headingErrorDeg = pose.yawDeg;
-            double kRotate = 0.01; // tune this
+            double kRotate = 0.023;
             autoRotate = Range.clip(kRotate * headingErrorDeg, -0.4, 0.4);
 
             telemetry.addData("TagID", pose.id);
-            telemetry.addData("Tag Z (m)", distanceMeters);
+            telemetry.addData("Tag Z (m)", distanceToTag);
             telemetry.addData("Tag Heading Error (deg)", headingErrorDeg);
             telemetry.addData("Hood pos", hoodPos);
             // telemetry.addData("shooter current Velocity", currentVelocity);
@@ -276,49 +283,55 @@ public class MainOpMode extends OpMode {
             if (gamepad1.left_trigger > 0.1) {
                 shooterTargetVelocity = TARGET_VELOCITY;
             }
+
+            distanceToTag = 0.0;
         }
-
-
 
         telemetry.addData("shooter Target Velocity", shooterTargetVelocity);
 
         // shooterMotor.setPower(power);
         // shooterMotor.setVelocity(shooterTargetVelocity);
 
+        if (leftTrigger <= 0.05) {
+            // Shooter idle
+            shooterTargetVelocity = 0.0;
+            autoRotate = 0.0;
+            return 0.0;
+        }
+
         return autoRotate;
     }
 
-    /**
-     * Intake / stage / ramp logic:
-     * - Left bumper:
-     *      intakeMotor      = 0.5
-     *      intakeRampMotor  = 0.5
-     * - Right trigger:
-     *      intakeMotor      >= 0.3
-     *      intakeRampMotor  >= 0.3
-     *   (if left bumper is also pressed, intake & ramp stay at 0.5)
-     */
-    private void updateIntakeStage(boolean leftBumper, double rightTrigger) {
+    private void updateIntakeStage(boolean leftBumper, double rightTrigger, boolean gateControl) {
         double intakePower = 0.0;
         double rampPower   = 0.0;
+        double stagePower = 0.0;
 
         // Left bumper: base 0.5 for intake + ramp
         if (leftBumper) {
             intakePower = 0.52;
-            rampPower   = 0.90;
+            rampPower   = 0.95;
         }
 
         // Right trigger: stage = 0.3, intake/ramp at least 0.3
         if (!leftBumper && rightTrigger > 0.05) {
             intakePower = 0.5;
-            rampPower   = 0.7;
-            shooterGate.setPosition(0.0);
+            rampPower   = 0.65;
+            stagePower = 0.75;
         } else {
-            shooterGate.setPosition(0.5);
+        }
+
+        // Right Bumper / main dPad down - Gate open close
+        if (gateControl){
+            shooterGate.setPosition(0.40);
+        }
+        else{
+            shooterGate.setPosition(0);
         }
 
         intakeMotor.setPower(intakePower);
         intakeRampMotor.setPower(rampPower);
+        stageMotor.setPower(stagePower);
     }
 
     private void driveFieldCentric(double x, double y, double rx, double autoRotate) {
@@ -343,6 +356,14 @@ public class MainOpMode extends OpMode {
         double fr = (rotatedY - rotatedX - finalRx) / denominator;
         double br = (rotatedY + rotatedX - finalRx) / denominator;
 
+        if (gamepad1.left_trigger >= 0.05) {
+            // slow down a bit if we are actively aiming
+            fl *= 0.85;
+            bl *= 0.85;
+            fr *= 0.85;
+            br *= 0.85;
+        }
+
         frontRight.setPower(fr);
         frontLeft.setPower(fl);
         backLeft.setPower(bl);
@@ -353,11 +374,17 @@ public class MainOpMode extends OpMode {
         double yawRad       = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
         double fieldHeading = yawRad - fieldYawOffsetRad;
 
-        telemetry.addData("Field Yaw (deg)", Math.toDegrees(fieldHeading));
+        telemetry.addData("Field Yaw Wireless (deg)", Math.toDegrees(fieldHeading));
         telemetry.addData("Shooter target vel", shooterTargetVelocity);
         telemetry.addData("Shooter power", shooterMotor.getPower());
         telemetry.addData("Intake power", intakeMotor.getPower());
         telemetry.addData("Ramp power", intakeRampMotor.getPower());
+        telemetry.addData("Stage power", stageMotor.getPower());
+        telemetry.addData("Shooter Gate Position", shooterGate.getPosition());
+        telemetry.addData("Tag Distance", distanceToTag);
+        telemetry.addData("Shooter Direction", shooterGate.getDirection());
+        telemetry.addData("FPS", tagService.visionPortal.getFps());
+
         telemetry.update();
     }
 
