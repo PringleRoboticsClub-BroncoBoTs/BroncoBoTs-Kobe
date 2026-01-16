@@ -4,6 +4,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -31,7 +32,7 @@ public class MainOpMode extends OpMode {
 
     // ********** MECHANISMS **********
     private DcMotor intakeMotor;        // "IntakeMotor"
-    private DcMotor shooterMotor;         // "shooterMotor"
+    private DcMotorEx shooterMotor;     // "shooterMotor" (now DcMotorEx for PIDF)
     private DcMotor intakeRampMotor;    // "RampMotor"
     private DcMotor stageMotor;   // stageMotor
     private Servo shooterGate;      // shooterGate
@@ -54,7 +55,7 @@ public class MainOpMode extends OpMode {
 
     // ********** SHOOTER CONSTANTS **********
     // Target velocity in ticks per second
-    public static double TARGET_VELOCITY = 1800;
+    public static double TARGET_VELOCITY = 1750;
 
     private static final double SHOOTER_TICKS_PER_REV = 28.0;
     private static final double SHOOTER_MAX_TICKS_PER_SEC = (6000 / 60.0) * SHOOTER_TICKS_PER_REV;   // 2800
@@ -63,7 +64,7 @@ public class MainOpMode extends OpMode {
     public static double kP = 0.04;
     public static double kI = 0.01;
     public static double kD = 0.0;
-    public static double kF = 90.0; // Tune this value first
+    public static double kF = 9.0; // Tune this value first (kF for velocity mode, typically much lower)
     // Shooter state
     private double shooterTargetVelocity = 0.0; // ticks / second
 
@@ -108,10 +109,11 @@ public class MainOpMode extends OpMode {
         boolean leftBumper_CNTRL2 = gamepad2.left_bumper; // intake
         boolean rightBumper_CNTRL2 = gamepad2.right_bumper; // Gate Open / Close
         boolean downButton = gamepad1.dpad_down; // Gate open / close
+        boolean dpadLeft = gamepad1.dpad_left;
+        boolean dpadRight = gamepad1.dpad_right;
 
         boolean finalIntake = leftBumper || leftBumper_CNTRL2;
         boolean gateControl = rightBumper_CNTRL2 || downButton;
-
 
         // Shooter + tag alignment returns desired auto-rotation contribution
         double autoRotate = updateShooterAndTag(leftTrigger, dt);
@@ -122,13 +124,35 @@ public class MainOpMode extends OpMode {
         // Field-centric drive
         driveFieldCentric(x, y, rx, autoRotate);
 
+        // only for tuning phase
+        // shooter velocity increment (5% per press, up to max)
+        if (dpadLeft) {
+            shooterTargetVelocity += SHOOTER_MAX_TICKS_PER_SEC * 0.05;
+            shooterTargetVelocity = Range.clip(shooterTargetVelocity, 0, SHOOTER_MAX_TICKS_PER_SEC);
+        }
+        // hood angle increment (0.1 per press, up to 1.0)
+        if (dpadRight) {
+            double hoodPos = hoodAdjuster.getPosition();
+            hoodPos += 0.1;
+            hoodPos = Range.clip(hoodPos, 0.0, 1.0);
+            hoodAdjuster.setPosition(hoodPos);
+        }
+
         sendTelemetry();
 
+        // Shooter always runs at 20% of max velocity unless actively aiming
         if (gamepad1.left_trigger > 0.1) {
-            shooterTargetVelocity = TARGET_VELOCITY;
-            shooterMotor.setPower(0.73);
-        } else if (gamepad1.left_trigger < 0.1){
-            shooterMotor.setPower(0.0);
+            // Actively aiming: set velocity based on tag distance if available
+            double velocity = TARGET_VELOCITY;
+            if (distanceToTag > 20.0) {
+                velocity = mapDistanceToShooterVelocity(distanceToTag);
+            }
+            shooterTargetVelocity = velocity;
+            shooterMotor.setVelocity(velocity);
+        } else {
+            // Idle: run at 20% of max velocity
+            shooterTargetVelocity = SHOOTER_MAX_TICKS_PER_SEC * 0.2;
+            shooterMotor.setVelocity(shooterTargetVelocity);
         }
     }
 
@@ -160,9 +184,11 @@ public class MainOpMode extends OpMode {
     }
 
     private void initMechanisms(HardwareMap hw) {
-        shooterMotor = hw.get(DcMotor.class, "shooterMotor");
+        shooterMotor = hw.get(DcMotorEx.class, "shooterMotor");
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setVelocityPIDFCoefficients(kP, kI, kD, kF);
 
         intakeMotor = hw.get(DcMotor.class,   "intakeMotor");
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -183,7 +209,7 @@ public class MainOpMode extends OpMode {
     private void initImu(HardwareMap hw) {
         imu = hw.get(IMU.class, "imu");
 
-        IMU.Parameters imuParams = new IMU.Parameters(
+        IMU.ParaInches imuParams = new IMU.ParaInches(
                 new RevHubOrientationOnRobot(
                         RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                         RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
@@ -256,11 +282,11 @@ public class MainOpMode extends OpMode {
         BroncoBoTAprilTagService.TagPose pose = tagService.getTagPose(TAG_ID_OF_INTEREST);
 
         if (pose != null) {
-            // Distance is Z only (forward depth)
-            distanceToTag = pose.getDistanceMeters();   // |z|
+            // Distance is X only (forward depth)
+            distanceToTag = pose.getDistanceInches();   // |x|
 
             // Distance -> shooter velocity (ticks / sec)
-            // shooterTargetVelocity = mapDistanceToShooterVelocity(distanceMeters);
+            // shooterTargetVelocity = mapDistanceToShooterVelocity(distanceInches);
 
             // shooterTargetVelocity = TARGET_VELOCITY; // ticks/sec
 
@@ -392,24 +418,26 @@ public class MainOpMode extends OpMode {
 
     // Distance (Z) -> shooter wheel velocity (ticks / second).
     // *** Tune minDist/maxDist and minFrac/maxFrac on-robot ***
-    private double mapDistanceToShooterVelocity(double distanceMeters) {
-        // lets make a quadratic equation or a polynomial
-        return 0.0;
+    private double mapDistanceToShooterVelocity(double distanceInches) {
+        // Example: linear mapping between 0.5m (min) and 3.0m (max)
+        double minDist = 30.0;
+        double maxDist = 80.0;
+        double minVel = SHOOTER_MAX_TICKS_PER_SEC * 0.35; // 35% for close
+        double maxVel = SHOOTER_MAX_TICKS_PER_SEC * 0.85; // 85% for far
+        double d = Range.clip(distanceInches, minDist, maxDist);
+        double t = (d - minDist) / (maxDist - minDist);
+        double velocity = minVel + t * (maxVel - minVel);
+        return Range.clip(velocity, minVel, maxVel);
     }
 
-    // Distance (Z) -> hood servo position (0..1).
-    // *** Tune based on your physical hood geometry ***
-    private double mapDistanceToHoodPosition(double distanceMeters) {
-        double minDist    = 0.5;   // closest shot
-        double maxDist    = 3.0;   // farthest shot you care about
+    // hood servo only accepts 0.0 to 1.0
+    private double mapDistanceToHoodPosition(double distanceInches) {
+        double minDist    = 30.0;   // closest shot
+        double maxDist    = 80.0;   // farthest shot you care about
         double closeAngle = 0.7;   // hood "up" (more arc)
         double farAngle   = 0.3;   // hood "down" (flatter)
 
-        double d = Range.clip(distanceMeters, minDist, maxDist);
-        double t = (d - minDist) / (maxDist - minDist);
-
-        double pos = closeAngle + t * (farAngle - closeAngle);
-        return Range.clip(pos, 0.0, 1.0);
+        return 0.0;
     }
 
     // ********** STOP / UTILS **********

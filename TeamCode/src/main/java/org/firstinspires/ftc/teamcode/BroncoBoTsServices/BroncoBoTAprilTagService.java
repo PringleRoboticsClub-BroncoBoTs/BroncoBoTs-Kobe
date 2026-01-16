@@ -10,16 +10,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 /**
- * AprilTagService
- * Lightweight AprilTag "service" that can be constructed from any OpMode and
- * queried for the pose of a single tag ID of interest.
- * Usage from MainOpMode:
- *     AprilTagService tagService = new AprilTagService(hardwareMap);
- *     AprilTagService.TagPose pose = tagService.getTagPose(20);
- *     if (pose != null) {
- *         double distanceZ = pose.getDistanceMeters(); // |Z|
- *         double yaw   = pose.yawDeg;
- *     }
+ * Service class to manage AprilTag detection using VisionPortal and AprilTagProcessor.
  */
 public class BroncoBoTAprilTagService {
 
@@ -73,25 +64,25 @@ public class BroncoBoTAprilTagService {
 
     /**
      * Simple value object for tag pose (robot-centric).
-     * x, y, z are in meters in the FTC coordinate frame from the camera to the tag.
+     * x, y, z are in Inches in the FTC coordinate frame from the camera to the tag.
      * yawDeg is the left/right angle from the camera to the tag (degrees).
      */
     public static class TagPose {
         public final int id;
-        public final double xMeters;
-        public final double yMeters;
-        public final double zMeters;   // forward distance
+        public final double xInches;
+        public final double yInches;
+        public final double zInches;   
         public final double yawDeg;
 
         public TagPose(int id,
-                       double xMeters,
-                       double yMeters,
-                       double zMeters,
+                       double xInches,
+                       double yInches,
+                       double zInches,
                        double yawDeg) {
             this.id = id;
-            this.xMeters = xMeters;
-            this.yMeters = yMeters;
-            this.zMeters = zMeters;
+            this.xInches = xInches;
+            this.yInches = yInches;
+            this.zInches = zInches;
             this.yawDeg = yawDeg;
         }
 
@@ -99,8 +90,8 @@ public class BroncoBoTAprilTagService {
          * "Distance" defined as Z only, since we auto-align to center the tag.
          * Returns |Z| so it is always positive.
          */
-        public double getDistanceMeters() {
-            return Math.abs(this.yMeters);
+        public double getDistanceInches() {
+            return Math.abs(this.yInches);
         }
     }
 }
