@@ -26,8 +26,9 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
 
     // ********** MECHANISMS **********
     protected DcMotor     intakeMotor;      // "intakeMotor"
-    protected DcMotor   shooterMotor;     // "shooterMotor"
+    protected DcMotor     shooterMotor;     // "shooterMotor"
     protected DcMotor     intakeRampMotor;  // "intakeRampMotor"
+    private DcMotor       stageMotor;   // stageMotor
     protected Servo       shooterGate;      // "shooterGate"
 
     // ********** DRIVE ENCODER CONSTANTS **********
@@ -58,10 +59,10 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
     private static final double SHOOTER_MAX_TICKS_PER_SEC =
             (6000 / 60.0) * SHOOTER_TICKS_PER_REV;   // 2800
 
-    public static double kP = 10.0;
-    public static double kI = 3.0;
+    public static double kP = 0.04;
+    public static double kI = 0.0;
     public static double kD = 0.0;
-    public static double kF = 12.0;
+    public static double kF = 8.0;
 
     // ********** COMMON INIT **********
 
@@ -86,6 +87,7 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
         shooterMotor    = hw.get(DcMotor.class, "shooterMotor");
         intakeMotor     = hw.get(DcMotor.class,   "intakeMotor");
         intakeRampMotor = hw.get(DcMotor.class,   "intakeRampMotor");
+        stageMotor      = hw.get(DcMotor.class, "stageMotor");
         shooterGate     = hw.get(Servo.class,     "shooterGate");
 
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -99,6 +101,8 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
         intakeRampMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intakeRampMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        stageMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        stageMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     private void setDriveZeroPower() {
@@ -212,22 +216,26 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
 
     protected void startShooter() {
         shooterMotor.setPower(0.67);
-        sleep((long) (4 * 1000));
-        shooterGate.setPosition(0.4);   // open gate to feed
-        sleep((long) (0.5 * 1000));
-        intakeRampMotor.setPower(0.7);  // stage into flywheel
     }
 
     protected void stopShooter() {
         shooterMotor.setPower(0.0);
+    }
+
+    protected void stopShooting() {
         intakeRampMotor.setPower(0.0);
+        stageMotor.setPower(0.0);
         shooterGate.setPosition(0.0);   // close gate
     }
 
     protected void shootForSeconds(double seconds) {
-        startShooter();
+        shooterGate.setPosition(0.4);   // open gate to feed
+        sleep((long) (0.5 * 1000));
+        intakeMotor.setPower(0.75);  // intake into ramp
+        intakeRampMotor.setPower(0.75);  // stage into flywheel
+        stageMotor.setPower(0.75);
         sleep((long) (seconds * 1000));
-        stopShooter();
+        stopShooting();
     }
 
     protected void startIntake(double intakePower, double rampPower) {
@@ -310,4 +318,98 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
         setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
+    /**
+     * @param inches Forward distance to travel (positive = forward, negative = backward)
+     * @param turnDegrees Total heading change to apply over the distance (positive = left/CCW, negative = right/CW)
+     * @param power Motor power (0.0 to 1.0)
+     */
+    protected void driveStraightWithEncoderTurn(double inches, double turnDegrees, double power) {
+        // Calculate encoder targets for each side
+        double Lc = Math.abs(inches); // center path length (in)
+        double theta = Math.toRadians(turnDegrees); // radians
+        double W = TURN_TRACK_WIDTH_INCHES; // track width (in)
+
+        // For a straight line with rotation, left and right travel:
+        // left = Lc + (theta * W / 2)
+        // right = Lc - (theta * W / 2)
+        double Dl = Lc + (theta * W / 2.0); // left distance (in)
+        double Dr = Lc - (theta * W / 2.0); // right distance (in)
+
+        // Convert to ticks
+        int leftCounts = (int) Math.round(Dl * TICKS_PER_INCH);
+        int rightCounts = (int) Math.round(Dr * TICKS_PER_INCH);
+
+        // If going backwards, flip the signs
+        double forwardSign = (inches >= 0.0) ? -1.0 : 1.0;
+        leftCounts *= forwardSign;
+        rightCounts *= forwardSign;
+
+        resetDriveEncoders();
+
+        frontLeft.setTargetPosition(leftCounts);
+        backLeft.setTargetPosition(leftCounts);
+        frontRight.setTargetPosition(rightCounts);
+        backRight.setTargetPosition(rightCounts);
+
+        setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        double p = Math.abs(power);
+        frontLeft.setPower(p);
+        backLeft.setPower(p);
+        frontRight.setPower(p);
+        backRight.setPower(p);
+
+        while (opModeIsActive() &&
+                (frontLeft.isBusy() || frontRight.isBusy()
+                        || backLeft.isBusy() || backRight.isBusy())) {
+            telemetry.addData("driveStraightWithEncoderTurn", "in=%.1f  deg=%.1f", inches, turnDegrees);
+            telemetry.addData("target L/R", "%d / %d", leftCounts, rightCounts);
+            telemetry.addData("FL/FR", "%d / %d",
+                    frontLeft.getCurrentPosition(), frontRight.getCurrentPosition());
+            telemetry.update();
+            idle();
+        }
+
+        setDrivePower(0.0);
+        setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    /**
+     * @param inches Distance to strafe (positive = right, negative = left)
+     * @param power Motor power (0.0 to 1.0)
+     */
+    protected void strafeInches(double inches, double power) {
+        // For mecanum: FL/BR forward, FR/BL backward for right strafe
+        int strafeCounts = (int) Math.round(inches * TICKS_PER_INCH);
+
+        resetDriveEncoders();
+
+        frontLeft.setTargetPosition(strafeCounts);
+        backRight.setTargetPosition(strafeCounts);
+        frontRight.setTargetPosition(-strafeCounts);
+        backLeft.setTargetPosition(-strafeCounts);
+
+        setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        double p = Math.abs(power);
+        frontLeft.setPower(p);
+        backLeft.setPower(p);
+        frontRight.setPower(p);
+        backRight.setPower(p);
+
+        while (opModeIsActive() &&
+                (frontLeft.isBusy() || frontRight.isBusy()
+                        || backLeft.isBusy() || backRight.isBusy())) {
+            telemetry.addData("strafeInches", "in=%.1f", inches);
+            telemetry.addData("target", "%d", strafeCounts);
+            telemetry.addData("FL/FR/BL/BR", "%d / %d / %d / %d",
+                    frontLeft.getCurrentPosition(), frontRight.getCurrentPosition(),
+                    backLeft.getCurrentPosition(), backRight.getCurrentPosition());
+            telemetry.update();
+            idle();
+        }
+
+        setDrivePower(0.0);
+        setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
 }
