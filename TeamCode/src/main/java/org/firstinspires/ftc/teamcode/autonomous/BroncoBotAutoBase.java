@@ -99,9 +99,6 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
         intakeRampMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intakeRampMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        shooterGate.scaleRange(0.0, 0.5);
-        shooterGate.setPosition(0.5);   // "closed" / idle
     }
 
     private void setDriveZeroPower() {
@@ -214,16 +211,17 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
     // ********** MECHANISM HELPERS **********
 
     protected void startShooter() {
-        shooterMotor.setPower(0.65);
-        sleep((long) (3 * 1000));
-        shooterGate.setPosition(0.0);   // open gate to feed
+        shooterMotor.setPower(0.67);
+        sleep((long) (4 * 1000));
+        shooterGate.setPosition(0.4);   // open gate to feed
+        sleep((long) (0.5 * 1000));
         intakeRampMotor.setPower(0.7);  // stage into flywheel
     }
 
     protected void stopShooter() {
         shooterMotor.setPower(0.0);
         intakeRampMotor.setPower(0.0);
-        shooterGate.setPosition(0.5);   // close gate
+        shooterGate.setPosition(0.0);   // close gate
     }
 
     protected void shootForSeconds(double seconds) {

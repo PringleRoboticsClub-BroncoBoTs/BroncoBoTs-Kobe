@@ -32,7 +32,7 @@ public class MainOpMode extends OpMode {
 
     // ********** MECHANISMS **********
     private DcMotor intakeMotor;        // "IntakeMotor"
-    private DcMotorEx shooterMotor;     // "shooterMotor" (now DcMotorEx for PIDF)
+    private DcMotor shooterMotor;     // "shooterMotor" (now DcMotorEx for PIDF)
     private DcMotor intakeRampMotor;    // "RampMotor"
     private DcMotor stageMotor;   // stageMotor
     private Servo shooterGate;      // shooterGate
@@ -82,6 +82,7 @@ public class MainOpMode extends OpMode {
         initDrive(hw);
         initMechanisms(hw);
         initImu(hw);
+
         initVision(hw);
 
         FtcDashboard dashboard = FtcDashboard.getInstance();
@@ -148,11 +149,13 @@ public class MainOpMode extends OpMode {
                 velocity = mapDistanceToShooterVelocity(distanceToTag);
             }
             shooterTargetVelocity = velocity;
-            shooterMotor.setVelocity(velocity);
+            shooterMotor.setPower(0.73);
+           // shooterMotor.setVelocity(velocity);
         } else {
             // Idle: run at 20% of max velocity
             shooterTargetVelocity = SHOOTER_MAX_TICKS_PER_SEC * 0.2;
-            shooterMotor.setVelocity(shooterTargetVelocity);
+           // shooterMotor.setVelocity(shooterTargetVelocity);
+            shooterMotor.setPower(0);
         }
     }
 
@@ -187,8 +190,9 @@ public class MainOpMode extends OpMode {
         shooterMotor = hw.get(DcMotorEx.class, "shooterMotor");
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        shooterMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        shooterMotor.setVelocityPIDFCoefficients(kP, kI, kD, kF);
+        shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+       // shooterMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+       // shooterMotor.setVelocityPIDFCoefficients(kP, kI, kD, kF);
 
         intakeMotor = hw.get(DcMotor.class,   "intakeMotor");
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -201,6 +205,9 @@ public class MainOpMode extends OpMode {
         shooterGate = hw.get(Servo.class,     "shooterGate");
         shooterGate.setDirection(Servo.Direction.FORWARD);
 
+        hoodAdjuster = hw.get(Servo.class,     "hoodAdjuster");
+        hoodAdjuster.setDirection(Servo.Direction.FORWARD);
+
         stageMotor = hw.get(DcMotor.class, "stageMotor");
         stageMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         stageMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -209,7 +216,7 @@ public class MainOpMode extends OpMode {
     private void initImu(HardwareMap hw) {
         imu = hw.get(IMU.class, "imu");
 
-        IMU.ParaInches imuParams = new IMU.ParaInches(
+        IMU.Parameters imuParams = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
                         RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                         RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
@@ -403,12 +410,14 @@ public class MainOpMode extends OpMode {
         telemetry.addData("Field Yaw Wireless (deg)", Math.toDegrees(fieldHeading));
         telemetry.addData("Shooter target vel", shooterTargetVelocity);
         telemetry.addData("Shooter power", shooterMotor.getPower());
+        // telemetry.addData("Shooter current Velocity", shooterMotor.getVelocity());
         telemetry.addData("Intake power", intakeMotor.getPower());
         telemetry.addData("Ramp power", intakeRampMotor.getPower());
         telemetry.addData("Stage power", stageMotor.getPower());
         telemetry.addData("Shooter Gate Position", shooterGate.getPosition());
         telemetry.addData("Tag Distance", distanceToTag);
         telemetry.addData("Shooter Direction", shooterGate.getDirection());
+        //telemetry.addData("current hood position", hoodAdjuster.getPosition());
         telemetry.addData("FPS", tagService.visionPortal.getFps());
 
         telemetry.update();

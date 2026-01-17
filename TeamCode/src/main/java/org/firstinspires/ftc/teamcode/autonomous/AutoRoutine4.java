@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * 2) Turn right 20 deg
  * 3) Shoot for 3 sec
  */
-@Autonomous(name = "Auto Routine 4 - Red", group = "Autonomous")
+@Autonomous(name = "Auto Routine 4 - Red Near", group = "Autonomous")
 public class AutoRoutine4 extends BroncoBotAutoBase {
 
     private static final double FOUR_FEET_INCHES = 48.0;
