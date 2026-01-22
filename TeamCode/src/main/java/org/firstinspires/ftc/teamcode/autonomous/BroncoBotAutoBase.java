@@ -215,7 +215,7 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
     // ********** MECHANISM HELPERS **********
 
     protected void startShooter() {
-        shooterMotor.setPower(0.67);
+        shooterMotor.setPower(0.75);
     }
 
     protected void stopShooter() {

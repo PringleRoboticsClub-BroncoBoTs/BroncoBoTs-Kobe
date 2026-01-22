@@ -20,7 +20,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.BroncoBoTsServices.BroncoBoTAprilTagService;
 
-@TeleOp(name = "ManualDrive", group = "Iterative OpMode")
+@TeleOp(name = "ManualDrive-MAIN", group = "Iterative OpMode")
 public class MainOpMode extends OpMode {
 
     // Test comment to try push wirelessly from Android Studio
@@ -72,7 +72,7 @@ public class MainOpMode extends OpMode {
     private BroncoBoTAprilTagService tagService;
 
     // Single tag ID of interest (change as needed)
-    private static final int TAG_ID_OF_INTEREST = 20;  // 20 - BLUE, 24 - RED
+    private int TAG_ID_OF_INTEREST = 20;  // 20 - BLUE, 24 - RED
 
     // ********** END OF VARIABLES **********
 
@@ -227,14 +227,18 @@ public class MainOpMode extends OpMode {
         fieldYawOffsetRad = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
     }
 
-    private void initVision(HardwareMap hw) {
+    public void initVision(HardwareMap hw) {
         // Webcam name: "webcam1"
         tagService = new BroncoBoTAprilTagService(hw);
     }
 
+    public void setTagID(int id) {
+        TAG_ID_OF_INTEREST = id;
+    }
+
     // ********** LOOP HELPERS **********
 
-    private void handleParking(double now) {
+    public void handleParking(double now) {
         boolean startButton = gamepad2.start;
 
         if (startButton) {
@@ -253,7 +257,7 @@ public class MainOpMode extends OpMode {
         }
     }
 
-    private void handleYawReset(double now) {
+    public void handleYawReset(double now) {
         // Treat OPTIONS as "select"
         boolean select = gamepad1.options;
 
@@ -280,7 +284,7 @@ public class MainOpMode extends OpMode {
      *
      * @return auto-rotation command to add to driver rx
      */
-    private double updateShooterAndTag(double leftTrigger, double dt) {
+    public double updateShooterAndTag(double leftTrigger, double dt) {
         double autoRotate = 0.0;
 
 
@@ -303,7 +307,8 @@ public class MainOpMode extends OpMode {
             // double currentVelocity = shooterMotor.getVelocity(); // ticks / second
 
             double headingErrorDeg = pose.yawDeg;
-            double kRotate = 0.023;
+            headingErrorDeg += 7;
+            double kRotate = 0.02;
             autoRotate = Range.clip(kRotate * headingErrorDeg, -0.4, 0.4);
 
             telemetry.addData("TagID", pose.id);
@@ -335,7 +340,7 @@ public class MainOpMode extends OpMode {
         return autoRotate;
     }
 
-    private void updateIntakeStage(boolean leftBumper, double rightTrigger, boolean gateControl) {
+    public void updateIntakeStage(boolean leftBumper, double rightTrigger, boolean gateControl) {
         double intakePower = 0.0;
         double rampPower   = 0.0;
         double stagePower = 0.0;
@@ -351,7 +356,6 @@ public class MainOpMode extends OpMode {
             intakePower = 0.5;
             rampPower   = 0.65;
             stagePower = 0.75;
-        } else {
         }
 
         // Right Bumper / main dPad down - Gate open close
@@ -451,20 +455,20 @@ public class MainOpMode extends OpMode {
 
     // ********** STOP / UTILS **********
 
-    private void stopDrive() {
+    public void stopDrive() {
         frontRight.setPower(0);
         frontLeft.setPower(0);
         backLeft.setPower(0);
         backRight.setPower(0);
     }
 
-    private void stopMechanisms() {
+    public void stopMechanisms() {
         shooterMotor.setPower(0);
         intakeMotor.setPower(0);
         intakeRampMotor.setPower(0);
     }
 
-    private void setDriveZeroPower() {
+    public void setDriveZeroPower() {
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

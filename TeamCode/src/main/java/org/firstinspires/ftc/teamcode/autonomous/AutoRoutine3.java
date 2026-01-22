@@ -41,42 +41,44 @@ public class AutoRoutine3 extends BroncoBotAutoBase {
 
             startShooter();
             sleep((long) (0.5 * 1000));
-            driveStraightWithEncoderTurn(-SIX_FEET_INCHES, 80.0, 0.6);
+            driveStraightWithEncoderTurn(SIX_FEET_INCHES, 80.0, 0.8);
 
-            // 3) Shoot and wait for 3 sec
-            shootForSeconds(3.0);
+            // 3) Shoot and wait for 2 sec
+            shootForSeconds(2.0);
 
             // 4) Turn left 250 deg
-            turnDegrees(-250, 0.7);
+            turnDegrees(-250, 0.9);
 
-            // 5) Move back 2 ft while intake active
+            // 5) Move back 3 ft while intake active
             startIntake(0.75, 0.75);
-            driveStraightInches(THREE_FEET_INCHES, 0.5);
+            driveStraightInches(THREE_FEET_INCHES+1, 0.8);
 
             // 6) Stop intake
             stopIntake();
 
-            // 7) Drive forward 2 ft
-            driveStraightInches(-THREE_FEET_INCHES+4, 0.8);
+            // 7) Drive forward 3.5 ft
+            driveStraightInches(-FOUR_FEET_INCHES, 0.9);
 
             //    Then turn right 250 deg (approx equivalent of "while turning")
-            turnDegrees(250, 0.7);
+            turnDegrees(250, 0.9);
 
-            // 8) Shoot and wait for 3 sec
-            shootForSeconds(3.0);
+            // 8) Shoot and wait for 2 sec
+            shootForSeconds(2.0);
 
-            turnDegrees(-250, 0.7);
+            turnDegrees(-250, 0.9);
             strafeInches(TWO_FEET_INCHES, 0.9);
 
-            startIntake(0.75, 0.75);
-            driveStraightInches(THREE_FEET_INCHES, 0.5);
+            startIntake(0.75, 0.5);
+            driveStraightInches(THREE_FEET_INCHES+2, 0.9);
             stopIntake();
 
-            driveStraightInches(-THREE_FEET_INCHES+4, 0.8);
-            strafeInches(TWO_FEET_INCHES, 0.9);
+            driveStraightInches(-THREE_FEET_INCHES+8, 0.9);
+            strafeInches(-TWO_FEET_INCHES-5, 0.9);
 
             turnDegrees(250, 0.7);
             shootForSeconds(2.0);
+
+            strafeInches(TWO_FEET_INCHES, 0.9);
 
             turnDegrees(-250, 0.6);
             strafeInches(-FOUR_FEET_INCHES, 0.9);

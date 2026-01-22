@@ -25,13 +25,19 @@ public class AutoRoutine4 extends BroncoBotAutoBase {
 
         if (isStopRequested()) return;
 
-        // 1) Move backwards 4 ft
-        driveStraightInches(-FOUR_FEET_INCHES, 0.5);
+        startShooter();
+
+        // 1) Move backwards 2.5 ft
+        driveStraightInches(30.0, 0.75);
 
         // 2) Turn left 20 deg
-        turnDegrees(20.0, 0.4);
+       // turnDegrees(20.0, 0.4);
 
         // 3) Shoot for 3 sec
         shootForSeconds(3.0);
+
+        strafeInches(12.0, 0.5);
+
+        stopShooter();
     }
 }
