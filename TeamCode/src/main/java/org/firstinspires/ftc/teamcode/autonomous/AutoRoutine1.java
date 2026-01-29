@@ -6,13 +6,22 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * Auto Routine 1 using encoder ticks:
  *
  * 1) Drive straight 6 ft
- * 2) Turn left 45 deg
- * 3) Shoot for 3 sec
- * 4) Turn right 112.5 deg
- * 5) Move back 4 ft with intake active
+ * 2) Turn left 80 deg
+ * 3) Shoot for 2 sec
+ * 4) Turn right 250 deg
+ * 5) Move back 3ft+1 with intake active
  * 6) Stop intake
- * 7) Drive forward 4 ft, then turn left 112.5 deg
- * 8) Shoot for 3 sechttp://192.168.43.1:8080/java/editor.html?/src/org/firstinspires/ftc/teamcode/autonomous/AutoRoutine2.java
+ * 7) Drive forward 3ft+8
+ * 8) Turn left 250 deg
+ * 9) Shoot for 2 sec
+ * 10) Turn right 250 deg
+ * 11) Strafe 2ft+3 right
+ * 12) Move back 3ft+2 with intake active
+ * 13) Stop intake
+ * 14) Drive forward 4ft
+ * 15) Strafe 2ft+5 left
+ * 16) Turn left 250 deg
+ * 17) Shoot for 2 sec
  */
 @Autonomous(name = "Auto Routine 1 - Blue Far", group = "Autonomous")
 public class AutoRoutine1 extends BroncoBotAutoBase {

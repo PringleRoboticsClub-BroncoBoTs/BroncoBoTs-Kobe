@@ -20,7 +20,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.BroncoBoTsServices.BroncoBoTAprilTagService;
 
-@TeleOp(name = "ManualDrive-MAIN", group = "Iterative OpMode")
+@TeleOp(name = "ManualDrive-BLUE", group = "Iterative OpMode")
 public class MainOpMode extends OpMode {
 
     // Test comment to try push wirelessly from Android Studio
@@ -32,7 +32,7 @@ public class MainOpMode extends OpMode {
 
     // ********** MECHANISMS **********
     private DcMotor intakeMotor;        // "IntakeMotor"
-    private DcMotor shooterMotor;     // "shooterMotor" (now DcMotorEx for PIDF)
+    private DcMotorEx shooterMotor;     // "shooterMotor" (now DcMotorEx for PIDF)
     private DcMotor intakeRampMotor;    // "RampMotor"
     private DcMotor stageMotor;   // stageMotor
     private Servo shooterGate;      // shooterGate
@@ -55,16 +55,16 @@ public class MainOpMode extends OpMode {
 
     // ********** SHOOTER CONSTANTS **********
     // Target velocity in ticks per second
-    public static double TARGET_VELOCITY = 1750;
+    public static double TARGET_VELOCITY = -500;
 
     private static final double SHOOTER_TICKS_PER_REV = 28.0;
     private static final double SHOOTER_MAX_TICKS_PER_SEC = (6000 / 60.0) * SHOOTER_TICKS_PER_REV;   // 2800
 
     // Shooter PID + feed-forward gains (tune on robot)
-    public static double kP = 0.04;
+    public static double kP = 5.0;
     public static double kI = 0.01;
     public static double kD = 0.0;
-    public static double kF = 9.0; // Tune this value first (kF for velocity mode, typically much lower)
+    public static double kF = 22.0; // Tune this value first (kF for velocity mode, typically much lower)
     // Shooter state
     private double shooterTargetVelocity = 0.0; // ticks / second
 
@@ -90,6 +90,20 @@ public class MainOpMode extends OpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
     }
+
+    public void initialize(HardwareMap hwMap) {
+        initDrive(hwMap);
+        initMechanisms(hwMap);
+        initImu(hwMap);
+
+        initVision(hwMap);
+
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+    }
+
 
     @Override
     public void loop() {
@@ -130,11 +144,18 @@ public class MainOpMode extends OpMode {
         if (dpadLeft) {
             shooterTargetVelocity += SHOOTER_MAX_TICKS_PER_SEC * 0.05;
             shooterTargetVelocity = Range.clip(shooterTargetVelocity, 0, SHOOTER_MAX_TICKS_PER_SEC);
+
+            double hoodPos = hoodAdjuster.getPosition();
+            hoodPos -= 0.02;
+            telemetry.addData("hoodPos", hoodPos);
+            hoodPos = Range.clip(hoodPos, 0.0, 1.0);
+            hoodAdjuster.setPosition(hoodPos);
         }
         // hood angle increment (0.1 per press, up to 1.0)
         if (dpadRight) {
             double hoodPos = hoodAdjuster.getPosition();
-            hoodPos += 0.1;
+            hoodPos += 0.02;
+            telemetry.addData("hoodPos", hoodPos);
             hoodPos = Range.clip(hoodPos, 0.0, 1.0);
             hoodAdjuster.setPosition(hoodPos);
         }
@@ -148,14 +169,15 @@ public class MainOpMode extends OpMode {
             if (distanceToTag > 20.0) {
                 velocity = mapDistanceToShooterVelocity(distanceToTag);
             }
+            velocity = 1080;
             shooterTargetVelocity = velocity;
-            shooterMotor.setPower(0.73);
-           // shooterMotor.setVelocity(velocity);
+            //shooterMotor.setPower(0.73);
+            shooterMotor.setVelocity(velocity);
         } else {
             // Idle: run at 20% of max velocity
             shooterTargetVelocity = SHOOTER_MAX_TICKS_PER_SEC * 0.2;
-           // shooterMotor.setVelocity(shooterTargetVelocity);
-            shooterMotor.setPower(0);
+            shooterMotor.setVelocity(shooterTargetVelocity);
+           // shooterMotor.setPower(0);
         }
     }
 
@@ -188,11 +210,11 @@ public class MainOpMode extends OpMode {
 
     private void initMechanisms(HardwareMap hw) {
         shooterMotor = hw.get(DcMotorEx.class, "shooterMotor");
-        shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-       // shooterMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-       // shooterMotor.setVelocityPIDFCoefficients(kP, kI, kD, kF);
+       // shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        shooterMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setVelocityPIDFCoefficients(kP, kI, kD, kF);
 
         intakeMotor = hw.get(DcMotor.class,   "intakeMotor");
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -206,7 +228,9 @@ public class MainOpMode extends OpMode {
         shooterGate.setDirection(Servo.Direction.FORWARD);
 
         hoodAdjuster = hw.get(Servo.class,     "hoodAdjuster");
-        hoodAdjuster.setDirection(Servo.Direction.FORWARD);
+        hoodAdjuster.setDirection(Servo.Direction.REVERSE);
+        hoodAdjuster.scaleRange(0, 0.40);
+        hoodAdjuster.setPosition(0);
 
         stageMotor = hw.get(DcMotor.class, "stageMotor");
         stageMotor.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -304,7 +328,7 @@ public class MainOpMode extends OpMode {
             // Distance -> hood servo position
             double hoodPos = mapDistanceToHoodPosition(distanceToTag);
             // hoodServo.setPosition(hoodPos);
-            // double currentVelocity = shooterMotor.getVelocity(); // ticks / second
+            double currentVelocity = shooterMotor.getVelocity(); // ticks / second
 
             double headingErrorDeg = pose.yawDeg;
             headingErrorDeg += 7;
@@ -315,7 +339,7 @@ public class MainOpMode extends OpMode {
             telemetry.addData("Tag Z (m)", distanceToTag);
             telemetry.addData("Tag Heading Error (deg)", headingErrorDeg);
             telemetry.addData("Hood pos", hoodPos);
-            // telemetry.addData("shooter current Velocity", currentVelocity);
+            telemetry.addData("shooter current Velocity", currentVelocity);
         } else {
             // No tag
             if (gamepad1.left_trigger > 0.1) {
@@ -414,14 +438,14 @@ public class MainOpMode extends OpMode {
         telemetry.addData("Field Yaw Wireless (deg)", Math.toDegrees(fieldHeading));
         telemetry.addData("Shooter target vel", shooterTargetVelocity);
         telemetry.addData("Shooter power", shooterMotor.getPower());
-        // telemetry.addData("Shooter current Velocity", shooterMotor.getVelocity());
+        telemetry.addData("Shooter current Velocity", shooterMotor.getVelocity());
         telemetry.addData("Intake power", intakeMotor.getPower());
         telemetry.addData("Ramp power", intakeRampMotor.getPower());
         telemetry.addData("Stage power", stageMotor.getPower());
         telemetry.addData("Shooter Gate Position", shooterGate.getPosition());
         telemetry.addData("Tag Distance", distanceToTag);
         telemetry.addData("Shooter Direction", shooterGate.getDirection());
-        //telemetry.addData("current hood position", hoodAdjuster.getPosition());
+        telemetry.addData("current hood position", hoodAdjuster.getPosition());
         telemetry.addData("FPS", tagService.visionPortal.getFps());
 
         telemetry.update();

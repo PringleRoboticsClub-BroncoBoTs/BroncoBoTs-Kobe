@@ -13,14 +13,19 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.BroncoBoTsServices.BroncoBoTAprilTagService;
-import org.firstinspires.ftc.teamcode.teleop.MainOpMode;
 
-@TeleOp(name = "ManualDrive-DONT_USE", group = "Iterative OpMode")
+@TeleOp(name = "ManualDrive-RED", group = "Iterative OpMode")
 public class MainOpMode2 extends OpMode {
 
-    private MainOpMode broncoBaseOpMode;
+    public MainOpMode broncoBaseOpMode = new MainOpMode();
     // Single tag ID of interest (change as needed)
     private static final int TAG_ID_OF_INTEREST = 24;  // 20 - BLUE, 24 - RED
 
@@ -28,8 +33,9 @@ public class MainOpMode2 extends OpMode {
 
     @Override
     public void init() {
+        HardwareMap hwMap = hardwareMap;
+        broncoBaseOpMode.initialize(hwMap);
         broncoBaseOpMode.setTagID(TAG_ID_OF_INTEREST);
-        broncoBaseOpMode.init();
     }
 
     @Override
