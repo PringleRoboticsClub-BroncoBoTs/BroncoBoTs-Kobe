@@ -61,10 +61,10 @@ public class MainOpMode extends OpMode {
     private static final double SHOOTER_MAX_TICKS_PER_SEC = (6000 / 60.0) * SHOOTER_TICKS_PER_REV;   // 2800
 
     // Shooter PID + feed-forward gains (tune on robot)
-    public static double kP = 5.0;
-    public static double kI = 0.01;
-    public static double kD = 0.0;
-    public static double kF = 22.0; // Tune this value first (kF for velocity mode, typically much lower)
+    public static double kP = 90;
+    public static double kI = 0.0;
+    public static double kD = 4.0;
+    public static double kF = 25; // Tune this value first (kF for velocity mode, typically much lower)
     // Shooter state
     private double shooterTargetVelocity = 0.0; // ticks / second
 
@@ -169,7 +169,7 @@ public class MainOpMode extends OpMode {
             if (distanceToTag > 20.0) {
                 velocity = mapDistanceToShooterVelocity(distanceToTag);
             }
-            velocity = 1080;
+            velocity = 1400;
             shooterTargetVelocity = velocity;
             //shooterMotor.setPower(0.73);
             shooterMotor.setVelocity(velocity);
