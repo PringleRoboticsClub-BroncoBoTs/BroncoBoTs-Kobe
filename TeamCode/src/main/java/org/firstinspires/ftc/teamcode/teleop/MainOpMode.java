@@ -91,20 +91,6 @@ public class MainOpMode extends OpMode {
         telemetry.update();
     }
 
-    public void initialize(HardwareMap hwMap) {
-        initDrive(hwMap);
-        initMechanisms(hwMap);
-        initImu(hwMap);
-
-        initVision(hwMap);
-
-        FtcDashboard dashboard = FtcDashboard.getInstance();
-        telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
-    }
-
-
     @Override
     public void loop() {
         double now = getRuntime();
