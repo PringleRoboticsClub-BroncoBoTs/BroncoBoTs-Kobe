@@ -19,7 +19,7 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.BroncoBoTsServices.BroncoBoTAprilTagService;
-
+@Config
 @TeleOp(name = "ManualDrive-BLUE", group = "Iterative OpMode")
 public class MainOpMode extends OpMode {
 
@@ -66,7 +66,7 @@ public class MainOpMode extends OpMode {
     public static double kD = 4.0;
     public static double kF = 25; // Tune this value first (kF for velocity mode, typically much lower)
     // Shooter state
-    private double shooterTargetVelocity = 0.0; // ticks / second
+    public static double shooterTargetVelocity = 0.0; // ticks / second
 
     // ********** APRILTAG SERVICE **********
     private BroncoBoTAprilTagService tagService;
@@ -109,6 +109,8 @@ public class MainOpMode extends OpMode {
     public void loop() {
         double now = getRuntime();
         double dt  = 0.0;
+
+        shooterMotor.setVelocityPIDFCoefficients(kP, kI, kD, kF);
 
         handleYawReset(now);
         handleParking(now);
