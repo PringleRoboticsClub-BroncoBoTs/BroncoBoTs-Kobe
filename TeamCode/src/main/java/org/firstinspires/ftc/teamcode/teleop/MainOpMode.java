@@ -55,16 +55,16 @@ public class MainOpMode extends OpMode {
 
     // ********** SHOOTER CONSTANTS **********
     // Target velocity in ticks per second
-    public static double TARGET_VELOCITY = -500;
+    public static double TARGET_VELOCITY = 1000;
 
     private static final double SHOOTER_TICKS_PER_REV = 28.0;
     private static final double SHOOTER_MAX_TICKS_PER_SEC = (6000 / 60.0) * SHOOTER_TICKS_PER_REV;   // 2800
 
     // Shooter PID + feed-forward gains (tune on robot)
-    public static double kP = 90;
+    public static double kP = 105;
     public static double kI = 0.0;
-    public static double kD = 4.0;
-    public static double kF = 25; // Tune this value first (kF for velocity mode, typically much lower)
+    public static double kD = 2.5;
+    public static double kF = 33; // Tune this value first (kF for velocity mode, typically much lower)
     // Shooter state
     public static double shooterTargetVelocity = 0.0; // ticks / second
 
@@ -171,7 +171,6 @@ public class MainOpMode extends OpMode {
             if (distanceToTag > 20.0) {
                 velocity = mapDistanceToShooterVelocity(distanceToTag);
             }
-            velocity = 1400;
             shooterTargetVelocity = velocity;
             //shooterMotor.setPower(0.73);
             shooterMotor.setVelocity(velocity);
@@ -323,7 +322,7 @@ public class MainOpMode extends OpMode {
             distanceToTag = pose.getDistanceInches();   // |x|
 
             // Distance -> shooter velocity (ticks / sec)
-            // shooterTargetVelocity = mapDistanceToShooterVelocity(distanceInches);
+            shooterTargetVelocity = mapDistanceToShooterVelocity(distanceToTag);
 
             // shooterTargetVelocity = TARGET_VELOCITY; // ticks/sec
 
@@ -333,7 +332,7 @@ public class MainOpMode extends OpMode {
             double currentVelocity = shooterMotor.getVelocity(); // ticks / second
 
             double headingErrorDeg = pose.yawDeg;
-            headingErrorDeg += 7;
+            headingErrorDeg += 0;
             double kRotate = 0.02;
             autoRotate = Range.clip(kRotate * headingErrorDeg, -0.4, 0.4);
 
@@ -351,17 +350,14 @@ public class MainOpMode extends OpMode {
             distanceToTag = 0.0;
         }
 
-        telemetry.addData("shooter Target Velocity", shooterTargetVelocity);
-
-        // shooterMotor.setPower(power);
-        // shooterMotor.setVelocity(shooterTargetVelocity);
-
         if (leftTrigger <= 0.05) {
             // Shooter idle
-            shooterTargetVelocity = 0.0;
+            shooterTargetVelocity = 560.0;
             autoRotate = 0.0;
-            return 0.0;
+            shooterMotor.setVelocity(shooterTargetVelocity);
         }
+
+        telemetry.addData("shooter Target Velocity", shooterTargetVelocity);
 
         return autoRotate;
     }
@@ -386,7 +382,7 @@ public class MainOpMode extends OpMode {
 
         // Right Bumper / main dPad down - Gate open close
         if (gateControl){
-            shooterGate.setPosition(0.40);
+            shooterGate.setPosition(0.30);
         }
         else{
             shooterGate.setPosition(0);
@@ -458,15 +454,9 @@ public class MainOpMode extends OpMode {
     // Distance (Z) -> shooter wheel velocity (ticks / second).
     // *** Tune minDist/maxDist and minFrac/maxFrac on-robot ***
     private double mapDistanceToShooterVelocity(double distanceInches) {
-        // Example: linear mapping between 0.5m (min) and 3.0m (max)
-        double minDist = 30.0;
-        double maxDist = 80.0;
-        double minVel = SHOOTER_MAX_TICKS_PER_SEC * 0.35; // 35% for close
-        double maxVel = SHOOTER_MAX_TICKS_PER_SEC * 0.85; // 85% for far
-        double d = Range.clip(distanceInches, minDist, maxDist);
-        double t = (d - minDist) / (maxDist - minDist);
-        double velocity = minVel + t * (maxVel - minVel);
-        return Range.clip(velocity, minVel, maxVel);
+        double velocity = 1000;
+        velocity = 10 * distanceToTag + 720;
+        return velocity;
     }
 
     // hood servo only accepts 0.0 to 1.0
