@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -20,6 +21,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.BroncoBoTsServices.BroncoBoTAprilTagService;
 
+
+@Config
 @TeleOp(name = "ManualDrive-BLUE", group = "Iterative OpMode")
 public class MainOpMode extends OpMode {
 
@@ -54,17 +57,18 @@ public class MainOpMode extends OpMode {
     private double distanceToTag = 0.0;
 
     // ********** SHOOTER CONSTANTS **********
-    // Target velocity in ticks per second
-    public static double TARGET_VELOCITY = -500;
 
     private static final double SHOOTER_TICKS_PER_REV = 28.0;
     private static final double SHOOTER_MAX_TICKS_PER_SEC = (6000 / 60.0) * SHOOTER_TICKS_PER_REV;   // 2800
 
-    // Shooter PID + feed-forward gains (tune on robot)
+     // Target velocity in ticks per second (configurable from dashboard)
+    public static double TARGET_IDLING_VELOCITY = SHOOTER_MAX_TICKS_PER_SEC * 0.2;
+
+    // Shooter PID + feed-forward gains (configurable from dashboard)
     public static double kP = 90;
     public static double kI = 0.0;
     public static double kD = 4.0;
-    public static double kF = 25; // Tune this value first (kF for velocity mode, typically much lower)
+    public static double kF = 25;
     // Shooter state
     private double shooterTargetVelocity = 0.0; // ticks / second
 
@@ -95,6 +99,9 @@ public class MainOpMode extends OpMode {
     public void loop() {
         double now = getRuntime();
         double dt  = 0.0;
+
+        // Update shooter PIDF coefficients live for dashboard tuning
+        shooterMotor.setVelocityPIDFCoefficients(kP, kI, kD, kF);
 
         handleYawReset(now);
         handleParking(now);
@@ -161,7 +168,6 @@ public class MainOpMode extends OpMode {
             shooterMotor.setVelocity(velocity);
         } else {
             // Idle: run at 20% of max velocity
-            shooterTargetVelocity = SHOOTER_MAX_TICKS_PER_SEC * 0.2;
             shooterMotor.setVelocity(shooterTargetVelocity);
            // shooterMotor.setPower(0);
         }
