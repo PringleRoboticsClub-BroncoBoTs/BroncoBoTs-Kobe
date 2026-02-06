@@ -26,9 +26,8 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
 
     // ********** MECHANISMS **********
     protected DcMotor     intakeMotor;      // "intakeMotor"
-    protected DcMotor     shooterMotor;     // "shooterMotor"
+    protected DcMotorEx   shooterMotor;     // "shooterMotor" (now DcMotorEx for PIDF)
     protected DcMotor     intakeRampMotor;  // "intakeRampMotor"
-    private DcMotor       stageMotor;   // stageMotor
     protected Servo       shooterGate;      // "shooterGate"
     protected Servo hoodAdjuster;     // hoodAdjuster
 
@@ -85,10 +84,9 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
         setDriveZeroPower();
 
         // --- Mechanisms (same names & setup as MainOpMode) ---
-        shooterMotor    = hw.get(DcMotor.class, "shooterMotor");
+        shooterMotor    = hw.get(DcMotorEx.class, "shooterMotor");
         intakeMotor     = hw.get(DcMotor.class,   "intakeMotor");
         intakeRampMotor = hw.get(DcMotor.class,   "intakeRampMotor");
-        stageMotor      = hw.get(DcMotor.class, "stageMotor");
         shooterGate     = hw.get(Servo.class,     "shooterGate");
         hoodAdjuster = hw.get(Servo.class,     "hoodAdjuster");
         hoodAdjuster.setDirection(Servo.Direction.REVERSE);
@@ -96,18 +94,19 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
         hoodAdjuster.setPosition(0);
 
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        //shooterMotor.setPIDFCoefficients(
-        //        DcMotorEx.RunMode.RUN_USING_ENCODER,
-        //        new PIDFCoefficients(kP, kI, kD, kF)
-        // );
+        shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        shooterMotor.setVelocityPIDFCoefficients(
+            org.firstinspires.ftc.teamcode.teleop.MainOpMode.kP,
+            org.firstinspires.ftc.teamcode.teleop.MainOpMode.kI,
+            org.firstinspires.ftc.teamcode.teleop.MainOpMode.kD,
+            org.firstinspires.ftc.teamcode.teleop.MainOpMode.kF
+        );
 
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeRampMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intakeRampMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        stageMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        stageMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     private void setDriveZeroPower() {
@@ -220,25 +219,31 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
     // ********** MECHANISM HELPERS **********
 
     protected void startShooter() {
-        shooterMotor.setPower(0.75);
+        startShooterWithVelocity(TARGET_VELOCITY);
+    }
+
+    protected void startShooterWithVelocity(double velocity) {
+        shooterMotor.setVelocity(velocity);
     }
 
     protected void stopShooter() {
-        shooterMotor.setPower(0.0);
+        shooterMotor.setVelocity(0.0);
+    }
+
+    protected void setShooterVelocity(double velocity) {
+        shooterMotor.setVelocity(velocity);
     }
 
     protected void stopShooting() {
         intakeRampMotor.setPower(0.0);
-        stageMotor.setPower(0.0);
         shooterGate.setPosition(0.0);   // close gate
     }
 
     protected void shootForSeconds(double seconds) {
         shooterGate.setPosition(0.4);   // open gate to feed
-        sleep((long) (0.5 * 1000));
-        intakeMotor.setPower(0.75);  // intake into ramp
-        intakeRampMotor.setPower(0.75);  // stage into flywheel
-        stageMotor.setPower(0.75);
+        sleep((long) (0.3 * 1000));
+        intakeMotor.setPower(0.6);  // intake into ramp
+        intakeRampMotor.setPower(0.6);  // stage into flywheel
         sleep((long) (seconds * 1000));
         stopShooting();
     }

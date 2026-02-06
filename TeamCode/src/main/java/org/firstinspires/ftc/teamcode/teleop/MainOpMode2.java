@@ -38,10 +38,6 @@ public class MainOpMode2 extends OpMode {
         broncoBaseOpMode.gamepad2 = gamepad2;
         broncoBaseOpMode.init();
         broncoBaseOpMode.setTagID(TAG_ID_OF_INTEREST);
-        // Properly initialize with hardwareMap and telemetry
-        broncoBaseOpMode.telemetry = telemetry;
-        broncoBaseOpMode.hardwareMap = hardwareMap;
-        broncoBaseOpMode.init();
     }
 
     @Override
