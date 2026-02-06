@@ -24,12 +24,19 @@ import org.firstinspires.ftc.teamcode.BroncoBoTsServices.BroncoBoTAprilTagServic
 
 @TeleOp(name = "ManualDrive-RED", group = "Iterative OpMode")
 public class MainOpMode2 extends OpMode {
-    private MainOpMode broncoBaseOpMode;
+
+    public MainOpMode broncoBaseOpMode;
+    // Single tag ID of interest (change as needed)
     private static final int TAG_ID_OF_INTEREST = 24;  // 20 - BLUE, 24 - RED
 
     @Override
     public void init() {
         broncoBaseOpMode = new MainOpMode();
+        broncoBaseOpMode.hardwareMap = hardwareMap;
+        broncoBaseOpMode.telemetry = telemetry;
+        broncoBaseOpMode.gamepad1 = gamepad1;
+        broncoBaseOpMode.gamepad2 = gamepad2;
+        broncoBaseOpMode.init();
         broncoBaseOpMode.setTagID(TAG_ID_OF_INTEREST);
         // Properly initialize with hardwareMap and telemetry
         broncoBaseOpMode.telemetry = telemetry;

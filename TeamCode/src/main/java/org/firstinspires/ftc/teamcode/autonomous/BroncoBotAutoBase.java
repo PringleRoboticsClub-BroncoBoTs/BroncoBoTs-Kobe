@@ -30,6 +30,7 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
     protected DcMotor     intakeRampMotor;  // "intakeRampMotor"
     private DcMotor       stageMotor;   // stageMotor
     protected Servo       shooterGate;      // "shooterGate"
+    protected Servo hoodAdjuster;     // hoodAdjuster
 
     // ********** DRIVE ENCODER CONSTANTS **********
     // Adjust these if your gearbox / wheels differ
@@ -89,8 +90,12 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
         intakeRampMotor = hw.get(DcMotor.class,   "intakeRampMotor");
         stageMotor      = hw.get(DcMotor.class, "stageMotor");
         shooterGate     = hw.get(Servo.class,     "shooterGate");
+        hoodAdjuster = hw.get(Servo.class,     "hoodAdjuster");
+        hoodAdjuster.setDirection(Servo.Direction.REVERSE);
+        hoodAdjuster.scaleRange(0, 0.40);
+        hoodAdjuster.setPosition(0);
 
-        shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //shooterMotor.setPIDFCoefficients(
         //        DcMotorEx.RunMode.RUN_USING_ENCODER,

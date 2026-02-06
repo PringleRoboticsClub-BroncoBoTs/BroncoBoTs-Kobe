@@ -53,40 +53,45 @@ public class AutoRoutine1 extends BroncoBotAutoBase {
 
         driveStraightWithEncoderTurn(SIX_FEET_INCHES, -80.0, 0.9);
 
+        hoodAdjuster.setPosition(0.5);
+
         // 3) Shoot and wait for 2 sec
         shootForSeconds(2.0);
 
-        // 4) Turn right 250 deg
-        turnDegrees(250, 0.9);
+        // 4) Turn right 240 deg
+        turnDegrees(240, 0.9);
 
         // 5) Move back 3 ft while intake active
         startIntake(0.75, 0.5);
-        driveStraightInches(THREE_FEET_INCHES+1, 0.8);
+        driveStraightInches(THREE_FEET_INCHES+3, 0.8);
 
         // 6) Stop intake
         stopIntake();
 
         // 7) Drive forward 3.5 ft
-        driveStraightInches(-THREE_FEET_INCHES+8, 0.9);
+        driveStraightInches(-THREE_FEET_INCHES+9, 0.9);
 
         //    Then turn left 250 deg (approx equivalent of "while turning")
         turnDegrees(-250, 0.9);
+
+        // Make hood position 40 degrees
+
 
         // 8) Shoot and wait for 2 sec
         shootForSeconds(2.0);
 
         turnDegrees(250, 0.9);
 
-        strafeInches(-(TWO_FEET_INCHES+3), 0.9);
+        strafeInches(-(TWO_FEET_INCHES+4), 0.9);
 
         startIntake(0.75, 0.5);
         driveStraightInches(THREE_FEET_INCHES+2, 0.9);
         stopIntake();
 
         driveStraightInches(-FOUR_FEET_INCHES, 0.9);
-        strafeInches(TWO_FEET_INCHES+5, 0.9);
+        strafeInches(TWO_FEET_INCHES+6, 0.9);
 
-        turnDegrees(-250, 0.9);
+        turnDegrees(-260, 0.9);
         shootForSeconds(2.0);
 
         strafeInches(-TWO_FEET_INCHES, 0.9);
