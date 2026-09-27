@@ -17,87 +17,87 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 @Autonomous(name = "Auto Routine 3 - Red Far", group = "Autonomous")
 public class AutoRoutine3 extends BroncoBotAutoBase {
 
-        private static final double SIX_FEET_INCHES  = 72.0;
-        private static final double THREE_FEET_INCHES = 36.0;
-        private static final double FOUR_FEET_INCHES  = 48.0;
-        private static final double TWO_FEET_INCHES = 24.0;
+    private static final double SIX_FEET_INCHES  = 72.0;
+    private static final double THREE_FEET_INCHES = 36.0;
+    private static final double FOUR_FEET_INCHES  = 48.0;
+    private static final double TWO_FEET_INCHES = 24.0;
 
-        @Override
-        public void runOpMode() {
-            initHardware();
+    @Override
+    public void runOpMode() {
+        initHardware();
 
-            telemetry.addLine("Auto Routine 1 - Encoders: Ready");
-            telemetry.update();
+        telemetry.addLine("Auto Routine 1 - Encoders: Ready");
+        telemetry.update();
 
-            waitForStart();
+        waitForStart();
 
-            if (isStopRequested()) return;
+        if (isStopRequested()) return;
 
-            // 1) Drive straight 6 ft
-            // driveStraightInches(-SIX_FEET_INCHES+2, 0.7);
+        // 1) Drive straight 6 ft
+        // driveStraightInches(-SIX_FEET_INCHES+2, 0.7);
 
-            // 2) Turn right 80 deg
-            // turnDegrees(80.0, 0.6);
+        // 2) Turn right 80 deg
+        // turnDegrees(80.0, 0.6);
 
-            startShooter();
-            sleep((long) (0.5 * 1000));
-            driveStraightWithEncoderTurn(SIX_FEET_INCHES, 80.0, 0.8);
+        startShooter();
+        sleep((long) (0.5 * 1000));
+        driveStraightWithEncoderTurn(-SIX_FEET_INCHES, -80.0, 0.8);
 
-            // 3) Shoot and wait for 2 sec
-            shootForSeconds(2.0);
+        // 3) Shoot and wait for 2 sec
+        shootForSeconds(2.0);
 
-            // 4) Turn left 250 deg
-            turnDegrees(-250, 0.9);
+        // 4) Turn left 250 deg
+        turnDegrees(-20, 0.9);
 
-            // 5) Move back 3 ft while intake active
-            startIntake(0.75, 0.75);
-            driveStraightInches(THREE_FEET_INCHES+1, 0.8);
+        // 5) Move back 3 ft while intake active
+        startIntake(0.75, 0.75);
+        driveStraightInches(THREE_FEET_INCHES+1, 0.8);
 
-            // 6) Stop intake
-            stopIntake();
+        // 6) Stop intake
+        stopIntake();
 
-            // 7) Drive forward 3.5 ft
-            driveStraightInches(-FOUR_FEET_INCHES, 0.9);
+        // 7) Drive forward 3.5 ft
+        /*driveStraightInches(-FOUR_FEET_INCHES, 0.9);
 
-            //    Then turn right 250 deg (approx equivalent of "while turning")
-            turnDegrees(250, 0.9);
+        //    Then turn right 250 deg (approx equivalent of "while turning")
+        turnDegrees(-70, 0.9);
 
-            // 8) Shoot and wait for 2 sec
-            shootForSeconds(2.0);
+        // 8) Shoot and wait for 2 sec
+        shootForSeconds(2.0);
 
-            turnDegrees(-250, 0.9);
-            strafeInches(TWO_FEET_INCHES, 0.9);
+        turnDegrees(70, 0.9);
+        strafeInches(-TWO_FEET_INCHES, 0.9);
 
-            startIntake(0.75, 0.5);
-            driveStraightInches(THREE_FEET_INCHES+2, 0.9);
-            stopIntake();
+        startIntake(0.75, 0.75);
+        driveStraightInches(THREE_FEET_INCHES+2, 0.9);
+        stopIntake();
 
-            driveStraightInches(-THREE_FEET_INCHES+8, 0.9);
-            strafeInches(-TWO_FEET_INCHES-5, 0.9);
+        driveStraightInches(-THREE_FEET_INCHES+8, 0.9);
+        strafeInches(TWO_FEET_INCHES-5, 0.9);
 
-            turnDegrees(250, 0.7);
-            shootForSeconds(2.0);
+        turnDegrees(-70, 0.7);
+        shootForSeconds(2.0);
 
-            strafeInches(TWO_FEET_INCHES, 0.9);
+        strafeInches(-TWO_FEET_INCHES, 0.9);
 
-            turnDegrees(-250, 0.6);
-            strafeInches(-FOUR_FEET_INCHES, 0.9);
+        turnDegrees(70, 0.6);
+        /*strafeInches(FOUR_FEET_INCHES-12, 0.9);
 
-            startIntake(0.75, 0.75);
-            driveStraightInches(THREE_FEET_INCHES, 0.5);
-            stopIntake();
+        startIntake(0.75, 0.75);
+        driveStraightInches(THREE_FEET_INCHES, 0.5);
+        stopIntake();
 
-            driveStraightInches(-THREE_FEET_INCHES+4, 0.8);
-            strafeInches(FOUR_FEET_INCHES, 0.9);
+        driveStraightInches(-THREE_FEET_INCHES+4, 0.8);
+        strafeInches(FOUR_FEET_INCHES, 0.9);
 
-            turnDegrees(250, 0.7);
-            shootForSeconds(2.0);
+        turnDegrees(250, 0.7);
+        shootForSeconds(2.0);
 
-            turnDegrees(-250, 0.7);
-            strafeInches(-FOUR_FEET_INCHES, 0.9);
+        turnDegrees(-250, 0.7);
+        strafeInches(-FOUR_FEET_INCHES, 0.9);
 
-            stopShooter();
+        stopShooter();*/
 
-            // End: everything should already be stopped by helpers
+        // End: everything should already be stopped by helpers
     }
 }

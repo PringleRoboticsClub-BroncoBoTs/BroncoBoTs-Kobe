@@ -52,7 +52,7 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
             TICKS_PER_INCH * (Math.PI * TURN_TRACK_WIDTH_INCHES / 360.0);
 
     // ********** SHOOTER CONSTANTS (copied from MainOpMode) **********
-    public static double TARGET_VELOCITY = 1500;  // ticks/sec
+    public static double TARGET_VELOCITY = 1670;  // ticks/sec
 
     private static final double SHOOTER_TICKS_PER_REV     = 28.0;
     @SuppressWarnings("unused")
@@ -91,7 +91,7 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
         hoodAdjuster = hw.get(Servo.class,     "hoodAdjuster");
         hoodAdjuster.setDirection(Servo.Direction.REVERSE);
         hoodAdjuster.scaleRange(0, 0.40);
-        hoodAdjuster.setPosition(0);
+        //hoodAdjuster.setPosition(0);
 
         shooterMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -104,9 +104,12 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
         );
 
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        intakeRampMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        intakeRampMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intakeRampMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        shooterGate.setDirection(Servo.Direction.REVERSE);
+        shooterGate.setPosition(0);
     }
 
     private void setDriveZeroPower() {
@@ -240,7 +243,7 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
     }
 
     protected void shootForSeconds(double seconds) {
-        shooterGate.setPosition(0.4);   // open gate to feed
+        shooterGate.setPosition(0.2);   // open gate to feed
         sleep((long) (0.3 * 1000));
         intakeMotor.setPower(0.6);  // intake into ramp
         intakeRampMotor.setPower(0.6);  // stage into flywheel
@@ -393,6 +396,7 @@ public abstract class BroncoBotAutoBase extends LinearOpMode {
         int strafeCounts = (int) Math.round(inches * TICKS_PER_INCH);
 
         resetDriveEncoders();
+
 
         frontLeft.setTargetPosition(strafeCounts);
         backRight.setTargetPosition(strafeCounts);

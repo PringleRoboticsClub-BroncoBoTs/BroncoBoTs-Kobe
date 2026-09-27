@@ -6,8 +6,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * Auto Routine 5 using encoder ticks:
  * Blue Far shots
  */
-@Autonomous(name = "Auto Routine 1 - Blue Far", group = "Autonomous")
-public class AutoRoutine1 extends BroncoBotAutoBase {
+@Autonomous(name = "Auto Routine 5 - Blue Far - sideways", group = "Autonomous")
+public class AutoRoutine5 extends BroncoBotAutoBase {
 
     private static final double SIX_FEET_INCHES  = 72.0;
     private static final double THREE_FEET_INCHES = 36.0;
@@ -50,6 +50,10 @@ public class AutoRoutine1 extends BroncoBotAutoBase {
         driveStraightWithEncoderTurn(-48, 120.0, 0.8);
 
         shootForSeconds(3.0);
+
+        stopShooter();
+
+        hoodAdjuster.setPosition(0.0);
   
     }
 }
