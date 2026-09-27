@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.broncoBot.BroncoBoTsServices;
+package org.firstinspires.ftc.teamcode.BroncoBoTsServices;
 
 import android.util.Size;
 
@@ -10,20 +10,11 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 /**
- * AprilTagService
- * Lightweight AprilTag "service" that can be constructed from any OpMode and
- * queried for the pose of a single tag ID of interest.
- * Usage from MainOpMode:
- *     AprilTagService tagService = new AprilTagService(hardwareMap);
- *     AprilTagService.TagPose pose = tagService.getTagPose(20);
- *     if (pose != null) {
- *         double distanceZ = pose.getDistanceMeters(); // |Z|
- *         double yaw   = pose.yawDeg;
- *     }
+ * Service class to manage AprilTag detection using VisionPortal and AprilTagProcessor.
  */
 public class BroncoBoTAprilTagService {
 
-    private final VisionPortal visionPortal;
+    public final VisionPortal visionPortal;
     private final AprilTagProcessor aprilTagProcessor;
 
     public BroncoBoTAprilTagService(HardwareMap hardwareMap) {
@@ -31,12 +22,15 @@ public class BroncoBoTAprilTagService {
         // 1) Create processor
         aprilTagProcessor = new AprilTagProcessor.Builder()
                 .setDrawTagOutline(true)
+                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
                 .build();
 
         // 2) Create VisionPortal using webcam named "webcam1"
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .setCameraResolution(new Size(1280,720))
+                .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
+                .enableLiveView(true)
                 .addProcessor(aprilTagProcessor)
                 .build();
     }
@@ -70,25 +64,25 @@ public class BroncoBoTAprilTagService {
 
     /**
      * Simple value object for tag pose (robot-centric).
-     * x, y, z are in meters in the FTC coordinate frame from the camera to the tag.
+     * x, y, z are in Inches in the FTC coordinate frame from the camera to the tag.
      * yawDeg is the left/right angle from the camera to the tag (degrees).
      */
     public static class TagPose {
         public final int id;
-        public final double xMeters;
-        public final double yMeters;
-        public final double zMeters;   // forward distance
+        public final double xInches;
+        public final double yInches;
+        public final double zInches;   
         public final double yawDeg;
 
         public TagPose(int id,
-                       double xMeters,
-                       double yMeters,
-                       double zMeters,
+                       double xInches,
+                       double yInches,
+                       double zInches,
                        double yawDeg) {
             this.id = id;
-            this.xMeters = xMeters;
-            this.yMeters = yMeters;
-            this.zMeters = zMeters;
+            this.xInches = xInches;
+            this.yInches = yInches;
+            this.zInches = zInches;
             this.yawDeg = yawDeg;
         }
 
@@ -96,8 +90,8 @@ public class BroncoBoTAprilTagService {
          * "Distance" defined as Z only, since we auto-align to center the tag.
          * Returns |Z| so it is always positive.
          */
-        public double getDistanceMeters() {
-            return Math.abs(zMeters);
+        public double getDistanceInches() {
+            return Math.abs(this.yInches);
         }
     }
 }

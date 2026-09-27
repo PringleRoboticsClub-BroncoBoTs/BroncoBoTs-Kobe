@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * 2) Turn right 20 deg
  * 3) Shoot for 3 sec
  */
-@Autonomous(name = "Auto Routine 2 - Blue", group = "Autonomous")
+@Autonomous(name = "Auto Routine 2 - Blue Near", group = "Autonomous")
 public class AutoRoutine2 extends BroncoBotAutoBase {
 
     private static final double FOUR_FEET_INCHES = 48.0;
@@ -26,12 +26,14 @@ public class AutoRoutine2 extends BroncoBotAutoBase {
         if (isStopRequested()) return;
 
         // 1) Move backwards 4 ft
-        driveStraightInches(-FOUR_FEET_INCHES, 0.5);
+        driveStraightInches(-FOUR_FEET_INCHES, 0.9);
 
         // 2) Turn right 20 deg
-        //turnDegrees(-20.0, 0.4);
+        turnDegrees(20.0, 0.6);
 
         // 3) Shoot for 3 sec
-        //shootForSeconds(3.0);
+        shootForSeconds(3.0);
+
+        stopShooter();
     }
 }
