@@ -92,37 +92,19 @@ public class MainOpMode extends OpMode {
         double x  =  gamepad1.left_stick_x; // strafe
         double rx =  gamepad1.right_stick_x;// rotate
 
-        double leftTrigger  = gamepad1.left_trigger;   // shoot + auto align
-        double rightTrigger = gamepad1.right_trigger;  // stage + intake assist
-        boolean leftBumper  = gamepad1.left_bumper;    // intake + ramp
-        boolean leftBumper_CNTRL2 = gamepad2.left_bumper;
 
-        boolean finalIntake = leftBumper || leftBumper_CNTRL2;
-
-
-        // Shooter + tag alignment returns desired auto-rotation contribution
-        double autoRotate = updateShooterAndTag(leftTrigger, dt);
-
-        // Intake + stage motors (and ramp)
-        updateIntakeStage(finalIntake, rightTrigger);
 
         // Field-centric drive
-        driveFieldCentric(x, y, rx, autoRotate);
+        driveFieldCentric(x, y, rx, 0);
 
         sendTelemetry();
 
-        if (gamepad1.left_trigger > 0.1) {
-            shooterTargetVelocity = TARGET_VELOCITY;
-            shooterMotor.setPower(0.73);
-        } else if (gamepad1.left_trigger < 0.1){
-            shooterMotor.setPower(0.0);
-        }
+
     }
 
     @Override
     public void stop() {
         stopDrive();
-        stopMechanisms();
 
         if (tagService != null) {
             tagService.close();
@@ -138,33 +120,16 @@ public class MainOpMode extends OpMode {
         backRight  = hw.get(DcMotor.class, "backRight");
 
         // Adjust to match your wiring
-        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-        backLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        backRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
         setDriveZeroPower();
     }
 
     private void initMechanisms(HardwareMap hw) {
-        shooterMotor    = hw.get(DcMotor.class, "shooterMotor");
-        intakeMotor     = hw.get(DcMotor.class,   "intakeMotor");
-        intakeRampMotor = hw.get(DcMotor.class,   "intakeRampMotor");
-        shooterGate       = hw.get(Servo.class,     "shooterGate");
 
-        shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        // shooterMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
-
-        // shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        intakeRampMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intakeRampMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        // shooterGate.scaleRange(0.0, 0.5);
-        shooterGate.setPosition(0.5);
     }
 
     private void initImu(HardwareMap hw) {
@@ -172,8 +137,8 @@ public class MainOpMode extends OpMode {
 
         IMU.Parameters imuParams = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
-                        RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+                        RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                        RevHubOrientationOnRobot.UsbFacingDirection.LEFT));
 
         imu.initialize(imuParams);
 
@@ -183,7 +148,7 @@ public class MainOpMode extends OpMode {
 
     private void initVision(HardwareMap hw) {
         // Webcam name: "webcam1"
-        tagService = new BroncoBoTAprilTagService(hw);
+        //tagService = new BroncoBoTAprilTagService(hw);
     }
 
     // ********** LOOP HELPERS **********
@@ -354,10 +319,6 @@ public class MainOpMode extends OpMode {
         double fieldHeading = yawRad - fieldYawOffsetRad;
 
         telemetry.addData("Field Yaw (deg)", Math.toDegrees(fieldHeading));
-        telemetry.addData("Shooter target vel", shooterTargetVelocity);
-        telemetry.addData("Shooter power", shooterMotor.getPower());
-        telemetry.addData("Intake power", intakeMotor.getPower());
-        telemetry.addData("Ramp power", intakeRampMotor.getPower());
         telemetry.update();
     }
 
