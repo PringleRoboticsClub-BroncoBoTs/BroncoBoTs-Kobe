@@ -84,10 +84,18 @@ Pairing on the Driver Station: hold **OPTIONS + CROSS** to make a controller gam
 |---|---|
 | Left stick / right stick X | field-centric drive (same controls as `program_drivetrain`) |
 | OPTIONS (hold 0.75 s) | reset field-forward heading |
-| R2 / L2 | intake / outtake (reverse intake). Outtake overrides shooting so it can clear a jam |
+
+Only gamepad 1 drives.
+
+**Either gamepad (driver or operator)**
+
+| Control | Action |
+|---|---|
+| L2 (hold) | intake |
+| L1 (hold) | outtake (reverse intake). Overrides intake and any feed, so it can clear a jam |
 | R1 (hold) | **shoot**: releases balls only when the flywheel is at speed AND the turret is on target |
 
-**Gamepad 2 (operator)**
+**Gamepad 2 (operator) only**
 
 | Control | Action |
 |---|---|
@@ -95,7 +103,6 @@ Pairing on the Driver Station: hold **OPTIONS + CROSS** to make a controller gam
 | TRIANGLE | auto-aim on/off |
 | SQUARE | arm deploy/stow |
 | CIRCLE (hold) | force feed (skips the ready checks) |
-| L1 (hold) | outtake (reverse intake). Overrides any feed |
 | Right stick X | aim trim (auto-aim on) / manual turret (auto-aim off) |
 | D-pad up/down | RPM trim ±50 |
 | D-pad left | clear trims |
@@ -116,16 +123,16 @@ Both controllers give one rumble blip when the robot becomes ready to shoot.
 
 ## 3b. Simple TeleOp (`Simple TeleOp`)
 
-One controller (gamepad 1). There's no turret, vision or auto-aim, and the shooter runs at a fixed power. Use it to test the drive, intake, flywheel and gate on their own.
+Only gamepad 1 drives. Either gamepad can run the intake, shooter and gate. There's no turret, vision or auto-aim, and the shooter runs at a fixed power. Use it to test the drive, intake, flywheel and gate on their own.
 
-| Control | Action |
-|---|---|
-| Left stick | drive (robot-centric: forward is always the robot's front) |
-| Right stick X | rotate |
-| L2 (hold) | intake |
-| L1 (hold) | outtake (wins over intake) |
-| R2 (hold) | shooter motor at 45% (`SimpleTeleOp.SHOOTER_POWER`) |
-| D-pad up (hold) | open the shooter gate 30° left. Releasing it sends the gate back home. |
+| Gamepad | Control | Action |
+|---|---|---|
+| 1 | Left stick | drive (robot-centric: forward is always the robot's front) |
+| 1 | Right stick X | rotate |
+| 1 or 2 | L2 (hold) | intake |
+| 1 or 2 | L1 (hold) | outtake (wins over intake) |
+| 1 or 2 | R2 (hold) | shooter motor at 45% (`SimpleTeleOp.SHOOTER_POWER`) |
+| 1 or 2 | D-pad up (hold) | open the shooter gate 30° left. Releasing it sends the gate back home. |
 
 The gate homes to 0 at INIT.
 
@@ -150,11 +157,12 @@ The gate homes to 0 at INIT.
 The TurboBoTs robot is a **separate robot** that runs only `TurboBoTsTeleop` (`teleop/TurboBoTsTeleOp.java`). The file is self-contained: it doesn't use the BIOBUZZ subsystems or their settings, so tuning one robot can't affect the other.
 
 - **Driver Station config** on that robot: `frontLeft`, `frontRight`, `backLeft`, `backRight`, `shooterMotor`, `intakeMotor`, plus `imu`, the Control Hub's built-in IMU, for field-centric drive. Without `imu`, the robot drives robot-centric only.
-- **Controls** (gamepad 1):
+- **Controls**, gamepad 1 (driver):
   - left stick: drive
   - right stick X: rotate
   - SHARE: switch between robot-centric (forward is the robot's front, the default) and field-centric (forward is away from the driver)
   - OPTIONS (hold 0.75 s): field-centric only. Sets forward to the way the robot faces now.
+- **Controls**, either gamepad (driver or operator):
   - L2 (hold): intake
   - L1 (hold): outtake
   - R2 (hold): shooter at `SHOOTER_POWER` (35%)
@@ -163,7 +171,7 @@ The TurboBoTs robot is a **separate robot** that runs only `TurboBoTsTeleop` (`t
   2. Check the drive wheels with **`TurboBoTs: Drive Motors`**. It has the same buttons as `Tune: Drive Motors`, but uses this robot's directions. Don't use `Tune: Drive Motors` on this robot: it shows the BIOBUZZ robot's directions.
      - Current TurboBoTs directions: `frontLeft` REVERSE, `backLeft` REVERSE, `frontRight` FORWARD, `backRight` FORWARD.
      - If anything is still wrong, flip its `*_DIR` on the Dashboard "TurboBoTsTeleOp" card, then re-init the OpMode.
-  3. Field-centric needs to know how the Control Hub is mounted. Set `HUB_LOGO` / `HUB_USB` to match (default: label up, USB toward the back).
+  3. Field-centric needs to know how the Control Hub is mounted. On TurboBoTs the logo faces **left** and the USB ports face the **back** (`HUB_LOGO = LEFT`, `HUB_USB = BACKWARD`).
      - Test it: turn the robot 90° counter-clockwise. The `heading` in telemetry should read about +90.
      - Push the stick forward. The robot should drive away from you whichever way it faces.
   4. Copy the final values into the file.

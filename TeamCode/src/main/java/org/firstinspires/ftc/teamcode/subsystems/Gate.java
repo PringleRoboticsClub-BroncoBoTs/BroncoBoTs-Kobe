@@ -50,4 +50,11 @@ public class Gate {
     public void addTelemetry(Telemetry t) {
         t.addData("gate/open", open);
     }
+
+    /** Wiring/config diagnostics: commanded position, port and whether the port's PWM is on. */
+    public void addDiagnostics(Telemetry t) {
+        t.addData("gate/commandedPos", "%.3f  (home %.3f, open %.3f)", servo.getPosition(), CLOSED, openPosition());
+        t.addData("gate/port", "%d on %s", servo.getPortNumber(), servo.getConnectionInfo());
+        t.addData("gate/pwm", servo.getController().getPwmStatus());
+    }
 }

@@ -28,7 +28,10 @@ import org.firstinspires.ftc.teamcode.util.PoseStorage;
  * GAMEPAD 1 (driver)
  *   left stick           field-centric translate       right stick X   rotate
  *   OPTIONS (hold 0.75s) reset field-forward heading
- *   R2                   intake                        L2              outtake (reverse intake)
+ *   (driving is on gamepad 1 ONLY)
+ *
+ * EITHER gamepad - intake + shoot:
+ *   L2 (hold)            intake                        L1 (hold)       outtake (reverse intake)
  *   R1 (hold)            SHOOT - releases balls when flywheel is at speed and turret is on target
  *
  * GAMEPAD 2 (operator)
@@ -36,7 +39,7 @@ import org.firstinspires.ftc.teamcode.util.PoseStorage;
  *   SQUARE               arm deploy/stow               CIRCLE (hold)   force feed (ignores readiness)
  *   right stick X        auto-aim ON: trim aim  /  auto-aim OFF: rotate turret manually
  *   dpad up/down         flywheel RPM trim +/-50       dpad left       clear aim + RPM trim
- *   L1 (hold)            outtake (reverse intake) - also overrides any feed, to clear jams
+ *   (outtake also overrides any feed, to clear jams)
  *   SHARE (hold 1s)      re-zero turret  (ONLY with the turret physically facing forward!)
  *
  * CONTROLLER FEEDBACK (both controllers)
@@ -124,11 +127,12 @@ public abstract class BioBuzzTeleOp extends OpMode {
         handleYawReset(now);
         drive.driveFieldCentric(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
 
-        // Outtake (driver L2 or operator L1) takes priority over intake and over feeding.
-        if (gamepad1.left_trigger > 0.1 || gamepad2.left_bumper) robot.intakeRequest = Intake.State.OUTTAKE;
-        else if (gamepad1.right_trigger > 0.1) robot.intakeRequest = Intake.State.INTAKE;
+        // ---------------- either gamepad: intake + shoot ----------------
+        // Outtake (L1) takes priority over intake and over feeding.
+        if (gamepad1.left_bumper || gamepad2.left_bumper) robot.intakeRequest = Intake.State.OUTTAKE;
+        else if (gamepad1.left_trigger > 0.1 || gamepad2.left_trigger > 0.1) robot.intakeRequest = Intake.State.INTAKE;
         else robot.intakeRequest = Intake.State.OFF;
-        robot.shootRequested = gamepad1.right_bumper;
+        robot.shootRequested = gamepad1.right_bumper || gamepad2.right_bumper;
 
         // ---------------- operator ----------------
         if (gamepad2.crossWasPressed()) robot.shooterOn = !robot.shooterOn;

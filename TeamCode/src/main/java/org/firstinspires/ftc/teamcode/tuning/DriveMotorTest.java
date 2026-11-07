@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.tuning;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -55,7 +56,7 @@ public class DriveMotorTest extends OpMode {
     @Override
     public void init() {
         // Drivetrain applies the real motor directions + brake mode to these same motor objects.
-        drive = new Drivetrain(hardwareMap);
+        drive = new Drivetrain(hardwareMap, hubOrientation());
         drive.stop();
         for (int i = 0; i < 4; i++) motors[i] = hardwareMap.get(DcMotor.class, NAMES[i]);
         applyDirections(motors);
@@ -112,6 +113,11 @@ public class DriveMotorTest extends OpMode {
      * backLeft, backRight). Default: keep the BIOBUZZ Drivetrain directions.
      */
     protected void applyDirections(DcMotor[] motors) {}
+
+    /** Hook for another robot's Control Hub mounting. Default: the BIOBUZZ robot's. */
+    protected RevHubOrientationOnRobot hubOrientation() {
+        return new RevHubOrientationOnRobot(Drivetrain.HUB_LOGO, Drivetrain.HUB_USB);
+    }
 
     @Override
     public void stop() {

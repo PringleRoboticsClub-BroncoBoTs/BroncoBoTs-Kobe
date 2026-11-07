@@ -41,6 +41,11 @@ public class Drivetrain {
     private double fieldYawOffsetRad;
 
     public Drivetrain(HardwareMap hw) {
+        this(hw, new RevHubOrientationOnRobot(HUB_LOGO, HUB_USB));
+    }
+
+    /** For test OpModes on another robot whose Control Hub is mounted differently. */
+    public Drivetrain(HardwareMap hw, RevHubOrientationOnRobot hubOrientation) {
         frontRight = hw.get(DcMotor.class, RobotConfig.FRONT_RIGHT);
         frontLeft  = hw.get(DcMotor.class, RobotConfig.FRONT_LEFT);
         backLeft   = hw.get(DcMotor.class, RobotConfig.BACK_LEFT);
@@ -57,7 +62,7 @@ public class Drivetrain {
         }
 
         imu = hw.get(IMU.class, RobotConfig.IMU);
-        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(HUB_LOGO, HUB_USB)));
+        imu.initialize(new IMU.Parameters(hubOrientation));
         resetFieldYaw();
     }
 

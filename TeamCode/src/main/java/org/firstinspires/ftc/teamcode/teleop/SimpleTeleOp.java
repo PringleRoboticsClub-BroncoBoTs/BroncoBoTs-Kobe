@@ -14,12 +14,14 @@ import org.firstinspires.ftc.teamcode.subsystems.Shooter;
 import org.firstinspires.ftc.teamcode.subsystems.VoltageMonitor;
 
 /**
- * Simple one-controller TeleOp: no turret, no vision, no auto-aim, fixed shooter power.
+ * Simple TeleOp (gamepad1 drives; either gamepad runs intake/shooter/gate): no turret, no vision, no auto-aim, fixed shooter power.
  * Handy for testing the drivetrain, intake, flywheel and gate on their own.
  *
- * gamepad1 (PS5):
+ * gamepad1 (PS5, driver):
  *   left stick      drive (robot-centric: "forward" is always the robot's front)
  *   right stick X   rotate
+ *
+ * EITHER gamepad (driver or operator) - intake, shooter, gate:
  *   L2 (hold)       intake
  *   L1 (hold)       outtake (wins over intake)
  *   R2 (hold)       shooter motor at SHOOTER_POWER (45%), open-loop
@@ -49,7 +51,8 @@ public class SimpleTeleOp extends OpMode {
         gate.update();
 
         tel.addLine("Simple TeleOp ready. Gate homed to 0.");
-        tel.addLine("L stick drive | R stick rotate | L2 intake | L1 outtake | R2 shooter | D-pad up gate");
+        tel.addLine("GP1: L stick drive | R stick rotate");
+        tel.addLine("GP1 or GP2: L2 intake | L1 outtake | R2 shooter | D-pad up gate");
         tel.update();
     }
 
@@ -57,22 +60,24 @@ public class SimpleTeleOp extends OpMode {
     public void loop() {
         drive.driveRobotCentric(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
 
-        if (gamepad1.left_bumper) intake.set(Intake.State.OUTTAKE);
-        else if (gamepad1.left_trigger > 0.1) intake.set(Intake.State.INTAKE);
+        if (gamepad1.left_bumper || gamepad2.left_bumper) intake.set(Intake.State.OUTTAKE);
+        else if (gamepad1.left_trigger > 0.1 || gamepad2.left_trigger > 0.1) intake.set(Intake.State.INTAKE);
         else intake.set(Intake.State.OFF);
         intake.update();
 
-        boolean shooterOn = gamepad1.right_trigger > 0.1;
+        boolean shooterOn = gamepad1.right_trigger > 0.1 || gamepad2.right_trigger > 0.1;
         shooter.setRawPower(shooterOn ? SHOOTER_POWER : 0);
         double rpm = shooter.measureRpm();
 
-        gate.set(gamepad1.dpad_up);
+        gate.set(gamepad1.dpad_up || gamepad2.dpad_up);
         gate.update();
 
         tel.addData("Intake", intake.getState());
         tel.addData("Shooter", shooterOn ? String.format("ON %.0f%%", SHOOTER_POWER * 100) : "off");
         tel.addData("shooter/rpm", rpm);
         tel.addData("Gate", gate.isOpen() ? String.format("OPEN (%.0f deg)", Gate.OPEN_DEG) : "home");
+        tel.addData("D-pad up GP1 / GP2", "%b / %b", gamepad1.dpad_up, gamepad2.dpad_up);
+        gate.addDiagnostics(tel);
         tel.update();
     }
 

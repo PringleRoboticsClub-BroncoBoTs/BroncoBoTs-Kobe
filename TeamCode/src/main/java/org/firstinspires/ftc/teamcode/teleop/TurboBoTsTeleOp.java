@@ -24,12 +24,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Nothing else is used (no odometry, servos or camera). If "imu" is missing, field-centric is
  * simply unavailable and the robot drives robot-centric.
  *
- * gamepad1 (PS5):
+ * gamepad1 (PS5, driver):
  *   left stick      drive
  *   right stick X   rotate
  *   SHARE           toggle ROBOT-centric (forward = robot's front) / FIELD-centric (forward =
  *                   away from the driver, whichever way the robot faces)
  *   OPTIONS (hold)  field-centric: reset "forward" to the way the robot faces now
+ *
+ * EITHER gamepad (driver or operator) - intake + shooter:
  *   L2 (hold)       intake
  *   L1 (hold)       outtake (wins over intake)
  *   R2 (hold)       shooter at SHOOTER_POWER
@@ -49,7 +51,7 @@ public class TurboBoTsTeleOp extends OpMode {
     public static DcMotorSimple.Direction BACK_LEFT_DIR   = DcMotorSimple.Direction.REVERSE;
     public static DcMotorSimple.Direction FRONT_RIGHT_DIR = DcMotorSimple.Direction.FORWARD;
     public static DcMotorSimple.Direction BACK_RIGHT_DIR  = DcMotorSimple.Direction.FORWARD; // from TurboBoTs: Drive Motors test
-    public static DcMotorSimple.Direction SHOOTER_DIR     = DcMotorSimple.Direction.FORWARD; // TODO(verify)
+    public static DcMotorSimple.Direction SHOOTER_DIR     = DcMotorSimple.Direction.REVERSE; // reversed on robot
     public static DcMotorSimple.Direction INTAKE_DIR      = DcMotorSimple.Direction.FORWARD; // TODO(verify)
 
     public static double DRIVE_SPEED = 1.0;     // scale on all drive power (lower for gentler driving)
@@ -61,9 +63,9 @@ public class TurboBoTsTeleOp extends OpMode {
     public static boolean START_FIELD_CENTRIC = false;
     public static double RESET_HOLD_SEC = 0.75;
     public static RevHubOrientationOnRobot.LogoFacingDirection HUB_LOGO =
-            RevHubOrientationOnRobot.LogoFacingDirection.UP;        // TODO(verify) on this robot
+            RevHubOrientationOnRobot.LogoFacingDirection.LEFT;      // TurboBoTs hub: logo faces LEFT
     public static RevHubOrientationOnRobot.UsbFacingDirection HUB_USB =
-            RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD;   // TODO(verify) on this robot
+            RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD;   // TurboBoTs hub: USB faces BACK
 
     private DcMotor frontLeft, frontRight, backLeft, backRight, shooter, intake;
     private IMU imu; // null if this robot has no "imu" configured
@@ -90,8 +92,8 @@ public class TurboBoTsTeleOp extends OpMode {
         fieldCentric = START_FIELD_CENTRIC && imu != null;
 
         telemetry.addLine("TurboBoTs TeleOp ready.");
-        telemetry.addLine("L stick drive | R stick rotate | L2 intake | L1 outtake | R2 shooter");
-        telemetry.addLine("SHARE robot/field-centric | hold OPTIONS reset field forward");
+        telemetry.addLine("GP1: L stick drive | R stick rotate | SHARE robot/field-centric | hold OPTIONS reset forward");
+        telemetry.addLine("GP1 or GP2: L2 intake | L1 outtake | R2 shooter");
         if (imu == null) telemetry.addLine("No 'imu' in config: field-centric unavailable.");
         else telemetry.addLine("Field-centric forward = the way the robot faces NOW.");
         telemetry.update();
@@ -126,10 +128,10 @@ public class TurboBoTsTeleOp extends OpMode {
 
         // ---- intake / outtake ----
         String intakeState;
-        if (gamepad1.left_bumper) {
+        if (gamepad1.left_bumper || gamepad2.left_bumper) {
             intake.setPower(-Math.abs(OUTTAKE_POWER));
             intakeState = "OUTTAKE";
-        } else if (gamepad1.left_trigger > 0.1) {
+        } else if (gamepad1.left_trigger > 0.1 || gamepad2.left_trigger > 0.1) {
             intake.setPower(Math.abs(INTAKE_POWER));
             intakeState = "INTAKE";
         } else {
@@ -138,7 +140,7 @@ public class TurboBoTsTeleOp extends OpMode {
         }
 
         // ---- shooter ----
-        boolean shooterOn = gamepad1.right_trigger > 0.1;
+        boolean shooterOn = gamepad1.right_trigger > 0.1 || gamepad2.right_trigger > 0.1;
         shooter.setPower(shooterOn ? Range.clip(SHOOTER_POWER, 0, 1) : 0);
 
         telemetry.addData("Drive", imu == null ? "ROBOT-centric (no IMU)"
