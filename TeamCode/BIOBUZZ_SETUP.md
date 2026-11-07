@@ -145,7 +145,29 @@ The gate homes to 0 at INIT.
 - The turret zero carries over from Auto to TeleOp through `PoseStorage.turretZeroed`. If the Robot Controller app restarts, TeleOp re-zeros at INIT, so **start TeleOp with the turret facing forward**.
 - Unit tests: `./gradlew :TeamCode:testDebugUnitTest` (`TurretSafetyTest`).
 
-## 6. Legacy code
+## 6. TurboBoTs robot (`TurboBoTsTeleop`)
+
+The TurboBoTs robot is a **separate robot** that runs only `TurboBoTsTeleop` (`teleop/TurboBoTsTeleOp.java`). The file is self-contained: it doesn't use the BIOBUZZ subsystems or their settings, so tuning one robot can't affect the other.
+
+- **Driver Station config** on that robot: `frontLeft`, `frontRight`, `backLeft`, `backRight`, `shooterMotor`, `intakeMotor`, plus `imu`, the Control Hub's built-in IMU, for field-centric drive. Without `imu`, the robot drives robot-centric only.
+- **Controls** (gamepad 1):
+  - left stick: drive
+  - right stick X: rotate
+  - SHARE: switch between robot-centric (forward is the robot's front, the default) and field-centric (forward is away from the driver)
+  - OPTIONS (hold 0.75 s): field-centric only. Sets forward to the way the robot faces now.
+  - L2 (hold): intake
+  - L1 (hold): outtake
+  - R2 (hold): shooter at `SHOOTER_POWER` (35%)
+- **First run:**
+  1. Check each motor's direction. Driving forward must move the robot forward, L2 must pull balls in, and R2 must shoot out.
+  2. If any is wrong, flip its `*_DIR` on the Dashboard "TurboBoTsTeleOp" card, then re-init the OpMode.
+  3. Field-centric needs to know how the Control Hub is mounted. Set `HUB_LOGO` / `HUB_USB` to match (default: label up, USB toward the back).
+     - Test it: turn the robot 90° counter-clockwise. The `heading` in telemetry should read about +90.
+     - Push the stick forward. The robot should drive away from you whichever way it faces.
+  4. Copy the final values into the file.
+- The other OpModes still show up on that robot's Driver Station, because it's the same app. Don't run them there: they need hardware the TurboBoTs robot doesn't have.
+
+## 7. Legacy code
 
 - `ManualDrive` (`teleop/MainOpMode`) is kept unchanged as a drivetrain-only fallback.
 - The DECODE `AutoRoutine1-4` are `@Disabled` because the hardware they use is gone.
