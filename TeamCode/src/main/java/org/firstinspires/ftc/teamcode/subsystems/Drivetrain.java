@@ -13,10 +13,19 @@ import org.firstinspires.ftc.teamcode.config.RobotConfig;
 
 /**
  * Field-centric mecanum drive, extracted unchanged from the working ManualDrive OpMode on the
- * program_drivetrain branch (same motor names, directions, IMU orientation and mixing math).
+ * program_drivetrain branch (same motor names, directions and mixing math).
  * Only used in TeleOp - Pedro Pathing drives the motors in Autonomous.
+ *
+ * IMU: the Control Hub lies FLAT with its logo/label facing UP and its USB ports pointing to the
+ * BACK of the robot. If the hub is ever remounted, change HUB_LOGO / HUB_USB to match, or
+ * field-centric drive will be rotated (e.g. pushing forward drives sideways).
  */
 public class Drivetrain {
+    public static final RevHubOrientationOnRobot.LogoFacingDirection HUB_LOGO =
+            RevHubOrientationOnRobot.LogoFacingDirection.UP;
+    public static final RevHubOrientationOnRobot.UsbFacingDirection HUB_USB =
+            RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD;
+
     private final DcMotor frontRight, frontLeft, backLeft, backRight;
     private final IMU imu;
     private double fieldYawOffsetRad;
@@ -38,9 +47,7 @@ public class Drivetrain {
         }
 
         imu = hw.get(IMU.class, RobotConfig.IMU);
-        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.LEFT)));
+        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(HUB_LOGO, HUB_USB)));
         resetFieldYaw();
     }
 

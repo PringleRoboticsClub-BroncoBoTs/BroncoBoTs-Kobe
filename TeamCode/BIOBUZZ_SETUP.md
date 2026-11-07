@@ -17,7 +17,7 @@ Names must match exactly. They're defined in `config/RobotConfig.java`.
 | `armLeft` `armRight` | Servo | front arm pair |
 | `gateServo` | Servo | turret ball gate |
 | `pinpoint` | goBILDA Pinpoint Odometry Computer (I2C) | odometry |
-| `imu` | REV internal IMU | field-centric drive |
+| `imu` | REV internal IMU | field-centric drive. Control Hub mounted flat, label **up**, USB ports toward the **back**. If you remount it, update `Drivetrain.HUB_LOGO` / `HUB_USB` |
 | `Webcam 1` | Webcam | global-shutter USB camera |
 
 ## 2. Bring-up order (first time on the robot)
@@ -66,7 +66,7 @@ Pairing on the Driver Station: hold **OPTIONS + CROSS** to make a controller gam
 
 | Control | Action |
 |---|---|
-| Left stick / right stick X | field-centric drive (unchanged from `program_drivetrain`) |
+| Left stick / right stick X | field-centric drive (same controls as `program_drivetrain`) |
 | OPTIONS (hold 0.75 s) | reset field-forward heading |
 | R2 / L2 | intake / outtake (reverse intake). Outtake overrides shooting so it can clear a jam |
 | R1 (hold) | **shoot**: releases balls only when the flywheel is at speed AND the turret is on target |

@@ -138,7 +138,7 @@ public class MainOpMode extends OpMode {
         IMU.Parameters imuParams = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
                         RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                        RevHubOrientationOnRobot.UsbFacingDirection.LEFT));
+                        RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD)); // hub flat, label up, USB to the back
 
         imu.initialize(imuParams);
 
