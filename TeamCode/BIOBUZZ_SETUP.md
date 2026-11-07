@@ -124,7 +124,7 @@ One controller (gamepad 1). There's no turret, vision or auto-aim, and the shoot
 | Right stick X | rotate |
 | L2 (hold) | intake |
 | L1 (hold) | outtake (wins over intake) |
-| R2 (hold) | shooter motor at 35% (`SimpleTeleOp.SHOOTER_POWER`) |
+| R2 (hold) | shooter motor at 45% (`SimpleTeleOp.SHOOTER_POWER`) |
 | D-pad up (hold) | open the shooter gate 30° left. Releasing it sends the gate back home. |
 
 The gate homes to 0 at INIT.

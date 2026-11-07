@@ -22,7 +22,7 @@ import org.firstinspires.ftc.teamcode.subsystems.VoltageMonitor;
  *   right stick X   rotate
  *   L2 (hold)       intake
  *   L1 (hold)       outtake (wins over intake)
- *   R2 (hold)       shooter motor at SHOOTER_POWER (35%), open-loop
+ *   R2 (hold)       shooter motor at SHOOTER_POWER (45%), open-loop
  *   D-pad UP (hold) open the shooter gate (30 deg left of home); release = back to home
  *
  * The gate homes to 0 at INIT. The turret motor is not used.
@@ -30,7 +30,7 @@ import org.firstinspires.ftc.teamcode.subsystems.VoltageMonitor;
 @Config
 @TeleOp(name = "Simple TeleOp", group = "Competition")
 public class SimpleTeleOp extends OpMode {
-    public static double SHOOTER_POWER = 0.35;
+    public static double SHOOTER_POWER = 0.45;
 
     private Drivetrain drive;
     private Intake intake;
