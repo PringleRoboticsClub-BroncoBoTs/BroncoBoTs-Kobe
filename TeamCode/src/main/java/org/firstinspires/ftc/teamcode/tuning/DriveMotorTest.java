@@ -63,7 +63,8 @@ public class DriveMotorTest extends OpMode {
         telemetry.addLine("WHEEL TEST on blocks: hold L1 / R1 / L2 / R2 for one wheel, CROSS for all.");
         telemetry.addLine("STICK TEST on the floor: use the sticks (robot-centric, half power).");
         for (int i = 0; i < 4; i++) {
-            telemetry.addData(NAMES[i], "port %d  (%s)", motors[i].getPortNumber(), motors[i].getConnectionInfo());
+            telemetry.addData(NAMES[i], "port %d  dir %s  (%s)", motors[i].getPortNumber(),
+                    motors[i].getDirection(), motors[i].getConnectionInfo());
         }
         telemetry.update();
     }
@@ -92,14 +93,16 @@ public class DriveMotorTest extends OpMode {
         }
 
         telemetry.addLine("WHEEL TEST: L1/R1/L2/R2 = one wheel forward, CROSS = all.");
+        telemetry.addLine("Forward = TOP of the wheel moves toward the FRONT of the robot.");
         telemetry.addLine("STICK TEST: left stick right = strafe right, right stick right = turn clockwise.");
         telemetry.addData("Stick mode (TRIANGLE)", fieldCentric ? "FIELD-centric" : "ROBOT-centric");
         telemetry.addData("IMU yaw (OPTIONS = zero)", "%.1f deg  (turn CCW -> goes UP)",
                 Math.toDegrees(drive.getFieldHeadingRad()));
         for (int i = 0; i < 4; i++) {
             telemetry.addData(String.format("%-3s %-10s", BUTTONS[i], NAMES[i]),
-                    "port %d  power %+.2f  encoder %d",
-                    motors[i].getPortNumber(), motors[i].getPower(), motors[i].getCurrentPosition());
+                    "port %d  dir %s  power %+.2f  encoder %d",
+                    motors[i].getPortNumber(), motors[i].getDirection(), motors[i].getPower(),
+                    motors[i].getCurrentPosition());
         }
         telemetry.update();
     }

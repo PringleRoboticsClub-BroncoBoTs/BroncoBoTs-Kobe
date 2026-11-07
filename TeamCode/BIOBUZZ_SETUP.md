@@ -161,7 +161,7 @@ The TurboBoTs robot is a **separate robot** that runs only `TurboBoTsTeleop` (`t
 - **First run:**
   1. Check each motor's direction. Driving forward must move the robot forward, L2 must pull balls in, and R2 must shoot out.
   2. Check the drive wheels with **`TurboBoTs: Drive Motors`**. It has the same buttons as `Tune: Drive Motors`, but uses this robot's directions. Don't use `Tune: Drive Motors` on this robot: it shows the BIOBUZZ robot's directions.
-     - `frontLeft` and `backRight` are already flipped (`FORWARD` / `REVERSE`).
+     - Current TurboBoTs directions: `frontLeft` REVERSE, `backLeft` REVERSE, `frontRight` FORWARD, `backRight` FORWARD.
      - If anything is still wrong, flip its `*_DIR` on the Dashboard "TurboBoTsTeleOp" card, then re-init the OpMode.
   3. Field-centric needs to know how the Control Hub is mounted. Set `HUB_LOGO` / `HUB_USB` to match (default: label up, USB toward the back).
      - Test it: turn the robot 90° counter-clockwise. The `heading` in telemetry should read about +90.

@@ -121,9 +121,9 @@ public class MainOpMode extends OpMode {
 
         // Adjust to match your wiring
         frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
-        backRight.setDirection(DcMotorSimple.Direction.REVERSE);  // flipped after Tune: Drive Motors
-        frontLeft.setDirection(DcMotorSimple.Direction.FORWARD);  // flipped after Tune: Drive Motors
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRight.setDirection(DcMotorSimple.Direction.FORWARD);  // from Tune: Drive Motors
+        frontLeft.setDirection(DcMotorSimple.Direction.FORWARD);  // from Tune: Drive Motors
+        backLeft.setDirection(DcMotorSimple.Direction.FORWARD);   // from Tune: Drive Motors
 
         setDriveZeroPower();
     }

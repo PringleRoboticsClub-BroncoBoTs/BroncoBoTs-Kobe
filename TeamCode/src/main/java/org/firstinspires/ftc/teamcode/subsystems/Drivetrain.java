@@ -26,10 +26,10 @@ public class Drivetrain {
     // Wheel directions: + power must spin each wheel so the robot moves FORWARD.
     // Shared with Pedro (pedro/Constants.java) so TeleOp and Auto always agree.
     // Check with "Tune: Drive Motors" (CROSS = all four forward). Dashboard edits apply on OpMode re-init.
-    public static DcMotorSimple.Direction FRONT_LEFT_DIR  = DcMotorSimple.Direction.FORWARD; // flipped after Tune: Drive Motors
-    public static DcMotorSimple.Direction BACK_LEFT_DIR   = DcMotorSimple.Direction.REVERSE;
+    public static DcMotorSimple.Direction FRONT_LEFT_DIR  = DcMotorSimple.Direction.FORWARD; // from Tune: Drive Motors
+    public static DcMotorSimple.Direction BACK_LEFT_DIR   = DcMotorSimple.Direction.FORWARD; // from Tune: Drive Motors
     public static DcMotorSimple.Direction FRONT_RIGHT_DIR = DcMotorSimple.Direction.FORWARD;
-    public static DcMotorSimple.Direction BACK_RIGHT_DIR  = DcMotorSimple.Direction.REVERSE; // flipped after Tune: Drive Motors
+    public static DcMotorSimple.Direction BACK_RIGHT_DIR  = DcMotorSimple.Direction.FORWARD; // from Tune: Drive Motors
 
     public static final RevHubOrientationOnRobot.LogoFacingDirection HUB_LOGO =
             RevHubOrientationOnRobot.LogoFacingDirection.UP;
