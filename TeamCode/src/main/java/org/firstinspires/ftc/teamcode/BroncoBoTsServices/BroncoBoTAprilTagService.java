@@ -8,6 +8,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 
 /**
  * AprilTagService
@@ -46,10 +47,12 @@ public class BroncoBoTAprilTagService {
      * or null if not currently seen.
      */
     public TagPose getTagPose(int id) {
+        // SDK 12: detections are either single tags or tag clusters; only singles carry an id.
         for (AprilTagDetection detection : aprilTagProcessor.getDetections()) {
-            if (detection.id == id) {
+            if (detection instanceof AprilTagSingleDetection
+                    && ((AprilTagSingleDetection) detection).id == id) {
                 return new TagPose(
-                        detection.id,
+                        id,
                         detection.ftcPose.x,
                         detection.ftcPose.y,
                         detection.ftcPose.z,
