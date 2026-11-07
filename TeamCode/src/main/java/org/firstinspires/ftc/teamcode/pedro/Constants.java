@@ -11,11 +11,11 @@ import com.pedropathing.revhub.drivetrains.MecanumConfig;
 import com.pedropathing.revhub.localizers.PinpointConfig;
 import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
+import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
 
 /**
  * Pedro Pathing 3.x configuration for the BIOBUZZ robot.
@@ -31,17 +31,18 @@ import org.firstinspires.ftc.teamcode.config.RobotConfig;
  */
 public class Constants {
 
-    /** Motor names/directions match the working field-centric TeleOp from program_drivetrain. */
+    /** Motor names and directions are shared with the TeleOp Drivetrain. */
     public static MecanumConfig drivetrainConfig = new MecanumConfig(c -> {
         c.frontLeftName.set(RobotConfig.FRONT_LEFT);
         c.backLeftName.set(RobotConfig.BACK_LEFT);
         c.frontRightName.set(RobotConfig.FRONT_RIGHT);
         c.backRightName.set(RobotConfig.BACK_RIGHT);
 
-        c.frontLeftDirection.set(DcMotorSimple.Direction.REVERSE);
-        c.backLeftDirection.set(DcMotorSimple.Direction.REVERSE);
-        c.frontRightDirection.set(DcMotorSimple.Direction.FORWARD);
-        c.backRightDirection.set(DcMotorSimple.Direction.FORWARD);
+        // Same directions as TeleOp - edit them in Drivetrain, not here.
+        c.frontLeftDirection.set(Drivetrain.FRONT_LEFT_DIR);
+        c.backLeftDirection.set(Drivetrain.BACK_LEFT_DIR);
+        c.frontRightDirection.set(Drivetrain.FRONT_RIGHT_DIR);
+        c.backRightDirection.set(Drivetrain.BACK_RIGHT_DIR);
 
         c.manualBrakeMode.set(true);
     });

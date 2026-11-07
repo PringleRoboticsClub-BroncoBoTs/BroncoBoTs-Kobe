@@ -28,14 +28,24 @@ Look for `TODO(tune)` / `TODO(measure)` / `TODO(verify)` in the code. Every one 
    - Hold L1 / R1 / L2 / R2 to spin frontLeft / frontRight / backLeft / backRight. CROSS spins all four.
    - Each button must spin the wheel it names, in the forward direction.
    - **Wrong wheel:** swap those two names in the Driver Station configuration, or swap the cables on the hub.
-   - **Right wheel, spinning backwards:** change that motor's direction in both `Drivetrain` and `pedro/Constants.java`.
+   - **Right wheel, spinning backwards:** flip that wheel's `*_DIR` setting in `Drivetrain`. Pedro uses the same values. You can try it live on FTC Dashboard (Drivetrain card), then re-init the OpMode.
    - Current config: port 0 `frontRight`, 1 `frontLeft`, 2 `backRight`, 3 `backLeft`.
-2. **Servo positions**: run `Tune: Servo Positions`. Align both arm servos first, then set `Arm.STOWED/DEPLOYED` and `Gate.OPEN/CLOSED`.
+   - **Stick test** (on the floor, no buttons held). The sticks drive robot-centric at half power:
+     - Left stick right must strafe right without turning.
+     - Right stick right must turn clockwise in place.
+     - If either is wrong, the mecanum wheels are on the wrong corners. Seen from above, the rollers must form an **X**.
+     - TRIANGLE switches to field-centric. If only field-centric is wrong, check the IMU: turning the robot counter-clockwise must make `IMU yaw` go **up**.
+2. **Servo positions**: run `Tune: Servo Positions`. Align both arm servos first, then set `Arm.STOWED/DEPLOYED`. The gate's home is servo position 0 (`Gate.CLOSED`). It opens `Gate.OPEN_DEG` (30°) to the left, worked out from `Gate.SERVO_RANGE_DEG` (300° for a goBILDA 2000-series servo).
 3. **Turret: wiring safety first.** Run `Tune: Turret` with the turret facing forward at INIT.
    - In CALIBRATE mode (motor off), turn the turret by hand:
      - CCW seen from above must read **positive**. If it doesn't, flip `Turret.MOTOR_REVERSED`.
      - Turning it 90° by hand must read about 90. If it doesn't, fix `MOTOR_REVS_PER_TURRET_REV`, the motor-to-turret gearing.
    - Turn it each way until the wires are snug. Set `MIN_DEG` / `MAX_DEG` a few degrees inside those points.
+   - **Validate the limits** with `Tune: Turret Limits`. Start it with the turret facing forward.
+     - Hold **L1** to turn slowly to `MIN_DEG`, **R1** to turn slowly to `MAX_DEG`, and **CROSS** to come back to 0.
+     - Release any button and the turret holds where it is.
+     - At each limit, the wires must still have slack. If they don't, tighten the limit on the Dashboard "Turret" card. It takes effect immediately.
+     - If the turret turns the wrong way or jams, the test cuts the motor.
    - STEP mode: tune `kP`, then `kD`, then `kS`. Graph `turret/targetDeg` against `turret/angleDeg`.
    - SWEEP mode: the turret must stop at a limit and then **unwind the long way**. It must never cross the dead zone.
 4. **Flywheel**:
@@ -103,6 +113,21 @@ Pairing on the Driver Station: hold **OPTIONS + CROSS** to make a controller gam
 Both controllers give one rumble blip when the robot becomes ready to shoot.
 
 **Tuning OpModes** use gamepad 1 with the same PS names. Each one's controls are shown in its telemetry.
+
+## 3b. Simple TeleOp (`Simple TeleOp`)
+
+One controller (gamepad 1). There's no turret, vision or auto-aim, and the shooter runs at a fixed power. Use it to test the drive, intake, flywheel and gate on their own.
+
+| Control | Action |
+|---|---|
+| Left stick | drive (robot-centric: forward is always the robot's front) |
+| Right stick X | rotate |
+| L2 (hold) | intake |
+| L1 (hold) | outtake (wins over intake) |
+| R2 (hold) | shooter motor at 35% (`SimpleTeleOp.SHOOTER_POWER`) |
+| D-pad up (hold) | open the shooter gate 30° left. Releasing it sends the gate back home. |
+
+The gate homes to 0 at INIT.
 
 ## 4. How aiming works
 

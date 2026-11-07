@@ -27,26 +27,40 @@ import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
  *      Wrong wheel -> the cables are swapped: either move the cables on the hub, or swap the
  *      names on those ports in the Driver Station configuration.
  *   2. It spins so the robot would move FORWARD.
- *      Backwards -> change that side's direction in Drivetrain AND pedro/Constants.java.
+ *      Backwards -> flip that wheel's *_DIR in Drivetrain (Pedro uses the same values).
+ *
+ * STICK TEST (no buttons held, robot on the floor, at reduced power STICK_SCALE):
+ *   The sticks drive ROBOT-centric (IMU ignored). TRIANGLE toggles field-centric to compare.
+ *     left stick right  -> robot must STRAFE RIGHT without turning
+ *     right stick right -> robot must TURN CLOCKWISE in place
+ *   Robot-centric wrong -> mecanum wheels are on the wrong corners (rollers seen from ABOVE
+ *                          must form an "X"), since the wiring + directions already passed.
+ *   Robot-centric right but field-centric wrong -> IMU problem: turn the robot CCW by hand,
+ *                          "IMU yaw" must INCREASE (about +90 after a quarter turn).
  */
 @Config
 @TeleOp(name = "Tune: Drive Motors", group = "Tuning")
 public class DriveMotorTest extends OpMode {
     public static double TEST_POWER = 0.3;
+    public static double STICK_SCALE = 0.5;
 
     private static final String[] NAMES = {
             RobotConfig.FRONT_LEFT, RobotConfig.FRONT_RIGHT, RobotConfig.BACK_LEFT, RobotConfig.BACK_RIGHT};
     private static final String[] BUTTONS = {"L1", "R1", "L2", "R2"};
 
     private final DcMotor[] motors = new DcMotor[4];
+    private Drivetrain drive;
+    private boolean fieldCentric = false;
 
     @Override
     public void init() {
         // Drivetrain applies the real motor directions + brake mode to these same motor objects.
-        new Drivetrain(hardwareMap).stop();
+        drive = new Drivetrain(hardwareMap);
+        drive.stop();
         for (int i = 0; i < 4; i++) motors[i] = hardwareMap.get(DcMotor.class, NAMES[i]);
 
-        telemetry.addLine("ROBOT ON BLOCKS. Hold L1 / R1 / L2 / R2 to spin one wheel, CROSS for all.");
+        telemetry.addLine("WHEEL TEST on blocks: hold L1 / R1 / L2 / R2 for one wheel, CROSS for all.");
+        telemetry.addLine("STICK TEST on the floor: use the sticks (robot-centric, half power).");
         for (int i = 0; i < 4; i++) {
             telemetry.addData(NAMES[i], "port %d  (%s)", motors[i].getPortNumber(), motors[i].getConnectionInfo());
         }
@@ -62,12 +76,29 @@ public class DriveMotorTest extends OpMode {
                 all || gamepad1.left_trigger > 0.5,
                 all || gamepad1.right_trigger > 0.5};
 
-        telemetry.addLine("Each button must spin the wheel it names, in the FORWARD direction.");
+        boolean anyHeld = held[0] || held[1] || held[2] || held[3];
+        if (gamepad1.triangleWasPressed()) fieldCentric = !fieldCentric;
+        if (gamepad1.optionsWasPressed()) drive.resetFieldYaw();
+
+        if (anyHeld) {
+            for (int i = 0; i < 4; i++) motors[i].setPower(held[i] ? TEST_POWER : 0);
+        } else {
+            double x = gamepad1.left_stick_x * STICK_SCALE;
+            double y = -gamepad1.left_stick_y * STICK_SCALE;
+            double rx = gamepad1.right_stick_x * STICK_SCALE;
+            if (fieldCentric) drive.driveFieldCentric(x, y, rx);
+            else drive.driveRobotCentric(x, y, rx);
+        }
+
+        telemetry.addLine("WHEEL TEST: L1/R1/L2/R2 = one wheel forward, CROSS = all.");
+        telemetry.addLine("STICK TEST: left stick right = strafe right, right stick right = turn clockwise.");
+        telemetry.addData("Stick mode (TRIANGLE)", fieldCentric ? "FIELD-centric" : "ROBOT-centric");
+        telemetry.addData("IMU yaw (OPTIONS = zero)", "%.1f deg  (turn CCW -> goes UP)",
+                Math.toDegrees(drive.getFieldHeadingRad()));
         for (int i = 0; i < 4; i++) {
-            motors[i].setPower(held[i] ? TEST_POWER : 0);
             telemetry.addData(String.format("%-3s %-10s", BUTTONS[i], NAMES[i]),
-                    "port %d  %s  encoder %d",
-                    motors[i].getPortNumber(), held[i] ? "SPINNING" : "-", motors[i].getCurrentPosition());
+                    "port %d  power %+.2f  encoder %d",
+                    motors[i].getPortNumber(), motors[i].getPower(), motors[i].getCurrentPosition());
         }
         telemetry.update();
     }

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Finds servo set-points (Arm.STOWED / DEPLOYED, Gate.OPEN / CLOSED, turret servo center).
+ * Finds servo set-points (Arm.STOWED / DEPLOYED, Gate.CLOSED and the gate's open angle).
  * Servos do NOT move until you press a dpad up/down or TRIANGLE/CROSS, so nothing jumps at start.
  *
  * gamepad1: dpad left/right = select servo
