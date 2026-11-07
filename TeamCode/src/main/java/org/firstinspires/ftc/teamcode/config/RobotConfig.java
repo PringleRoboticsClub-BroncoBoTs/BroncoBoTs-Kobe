@@ -7,12 +7,11 @@ package org.firstinspires.ftc.teamcode.config;
  * Motors
  *   frontLeft / frontRight / backLeft / backRight  goBILDA drive motors (program_drivetrain wiring)
  *   shooterMotor   goBILDA 5203 6000 RPM (1:1), drives the 96 mm flywheel via 2 mm GT2 belt
- *   turretMotor    goBILDA 5203 117 RPM (50.9:1) - only when Turret.ACTUATOR == MOTOR
+ *   turretMotor    goBILDA 5203 117 RPM (50.9:1) - encoder cable required
  *   intakeMotor    goBILDA 5203 1620/1650 RPM (3.7:1)
  * Servos
  *   armLeft / armRight   arm in front of the robot (mirrored pair)
  *   gateServo            gate that stops balls from entering the turret
- *   turretServo          only when Turret.ACTUATOR == SERVO
  * I2C
  *   pinpoint   goBILDA Pinpoint odometry computer (configure as "goBILDA Pinpoint Odometry Computer")
  *   imu        Control Hub IMU (used by field-centric drive)
@@ -33,7 +32,6 @@ public final class RobotConfig {
     // Mechanisms
     public static final String SHOOTER      = "shooterMotor";
     public static final String TURRET_MOTOR = "turretMotor";
-    public static final String TURRET_SERVO = "turretServo";
     public static final String INTAKE       = "intakeMotor";
     public static final String ARM_LEFT     = "armLeft";
     public static final String ARM_RIGHT    = "armRight";

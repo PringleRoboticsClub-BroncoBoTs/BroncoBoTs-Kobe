@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
  * Auto Routine 1 using encoder ticks:
@@ -14,6 +15,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
  * 7) Drive forward 4 ft, then turn left 112.5 deg
  * 8) Shoot for 3 sechttp://192.168.43.1:8080/java/editor.html?/src/org/firstinspires/ftc/teamcode/autonomous/AutoRoutine2.java
  */
+// DECODE (2025-26) robot routine - hardware no longer exists on the BIOBUZZ robot.
+@Disabled
 @Autonomous(name = "Auto Routine 1 - Blue", group = "Autonomous")
 public class AutoRoutine1 extends BroncoBotAutoBase {
 

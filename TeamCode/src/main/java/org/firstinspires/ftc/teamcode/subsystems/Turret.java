@@ -5,14 +5,13 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.config.RobotConfig;
 import org.firstinspires.ftc.teamcode.util.MathUtil;
 
 /**
- * goBILDA turret, driven either by a goBILDA 5203 117 RPM motor (default) or by a servo.
+ * goBILDA turret driven by a goBILDA 5203 117 RPM motor (50.9:1) with its encoder for feedback.
  *
  * ANGLE CONVENTION: degrees in the ROBOT frame, 0 = shooter facing robot-forward,
  * positive = counter-clockwise seen from above (same sign as AprilTag "bearing").
@@ -33,9 +32,6 @@ import org.firstinspires.ftc.teamcode.util.MathUtil;
  */
 @Config
 public class Turret {
-    public enum Actuator { MOTOR, SERVO }
-    public static Actuator ACTUATOR = Actuator.MOTOR;
-
     // ---------- Wiring-safe travel ----------
     public static double MIN_DEG = -170;            // TODO(verify on robot with wires attached)
     public static double MAX_DEG = 170;             // TODO(verify on robot with wires attached)
@@ -54,15 +50,7 @@ public class Turret {
     public static double MAX_POWER = 0.8;
     public static double TOLERANCE_DEG = 1.5;
 
-    // ---------- Servo mode ----------
-    public static boolean SERVO_REVERSED = false;
-    public static double SERVO_CENTER = 0.5;          // servo position with turret facing forward
-    public static double SERVO_DEG_PER_UNIT = 300.0;  // turret degrees for servo 0 -> 1 (after gearing) TODO(measure)
-    public static double SERVO_EST_DEG_PER_SEC = 400; // used to estimate angle (no feedback)
-
-    private final Actuator actuator;
-    private DcMotorEx motor;
-    private Servo servo;
+    private final DcMotorEx motor;
 
     private double desiredDeg = 0;   // what the caller asked for (any wrap)
     private double targetDeg = 0;    // wiring-safe resolved target inside limits
@@ -72,26 +60,18 @@ public class Turret {
     private double lastPower = 0;
     private boolean clamped = false;
     private boolean enabled = true;
-    private long lastNanos = 0;
 
     /**
      * @param resetEncoder true to define the CURRENT physical position as 0 deg (turret must be
      *                     facing forward). Pass false to keep the zero from a previous OpMode.
      */
     public Turret(HardwareMap hw, boolean resetEncoder) {
-        actuator = ACTUATOR;
-        if (actuator == Actuator.MOTOR) {
-            motor = hw.get(DcMotorEx.class, RobotConfig.TURRET_MOTOR);
-            motor.setDirection(MOTOR_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
-            if (resetEncoder) motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            angleDeg = readMotorAngle();
-        } else {
-            servo = hw.get(Servo.class, RobotConfig.TURRET_SERVO);
-            servo.setDirection(SERVO_REVERSED ? Servo.Direction.REVERSE : Servo.Direction.FORWARD);
-            angleDeg = 0; // servo has no feedback; assume it starts centered
-        }
+        motor = hw.get(DcMotorEx.class, RobotConfig.TURRET_MOTOR);
+        motor.setDirection(MOTOR_REVERSED ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+        if (resetEncoder) motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        angleDeg = readMotorAngle();
         targetDeg = MathUtil.clamp(angleDeg, MIN_DEG, MAX_DEG);
         desiredDeg = targetDeg;
     }
@@ -112,45 +92,28 @@ public class Turret {
 
     /** Disables output (motor floats in tuner calibration mode / coasts). */
     public void setEnabled(boolean enabled) {
+        if (enabled == this.enabled) return;
         this.enabled = enabled;
-        if (!enabled && motor != null) motor.setPower(0);
+        motor.setZeroPowerBehavior(enabled ? DcMotor.ZeroPowerBehavior.BRAKE : DcMotor.ZeroPowerBehavior.FLOAT);
+        if (!enabled) motor.setPower(0);
     }
 
     /** Re-defines the current physical position as 0 deg. Turret MUST be facing forward. */
     public void zeroHere() {
-        if (motor != null) {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        }
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         angleDeg = 0;
         targetDeg = 0;
         desiredDeg = 0;
     }
 
     public void update() {
-        long now = System.nanoTime();
-        double dt = lastNanos == 0 ? 0.02 : Math.min((now - lastNanos) / 1e9, 0.1);
-        lastNanos = now;
-
-        if (actuator == Actuator.MOTOR) {
-            angleDeg = readMotorAngle();
-            velocityDegPerSec = motor.getVelocity() / ticksPerDeg();
-            double power = enabled ? computeMotorPower() : 0;
-            power = applyLimitGuards(power, angleDeg);
-            lastPower = power;
-            motor.setPower(power);
-        } else {
-            // Model the servo moving toward its command so aiming logic has a usable estimate.
-            double step = SERVO_EST_DEG_PER_SEC * dt;
-            double prev = angleDeg;
-            angleDeg += MathUtil.clamp(targetDeg - angleDeg, -step, step);
-            velocityDegPerSec = (angleDeg - prev) / dt;
-            if (enabled) {
-                double pos = SERVO_CENTER + targetDeg / SERVO_DEG_PER_UNIT;
-                servo.setPosition(MathUtil.clamp(pos, 0.0, 1.0));
-            }
-            lastPower = 0;
-        }
+        angleDeg = readMotorAngle();
+        velocityDegPerSec = motor.getVelocity() / ticksPerDeg();
+        double power = enabled ? computeMotorPower() : 0;
+        power = applyLimitGuards(power, angleDeg);
+        lastPower = power;
+        motor.setPower(power);
     }
 
     // ------------------------------------------------------------------ control
@@ -231,7 +194,7 @@ public class Turret {
     /** True when the requested angle is in the wiring dead zone and we are parked at a limit. */
     public boolean isClamped() { return clamped; }
     public boolean atTarget() { return Math.abs(targetDeg - angleDeg) <= TOLERANCE_DEG * 2; }
-    public int getRawTicks() { return motor != null ? motor.getCurrentPosition() : 0; }
+    public int getRawTicks() { return motor.getCurrentPosition(); }
 
     public void addTelemetry(Telemetry t) {
         t.addData("turret/angleDeg", angleDeg);

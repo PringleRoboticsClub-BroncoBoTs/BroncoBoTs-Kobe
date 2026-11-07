@@ -27,3 +27,8 @@ android {
 dependencies {
     implementation project(':FtcRobotController')
 }
+
+// Local JVM unit tests for pure logic (turret wrap safety, lookup tables): ./gradlew :TeamCode:testDebugUnitTest
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}

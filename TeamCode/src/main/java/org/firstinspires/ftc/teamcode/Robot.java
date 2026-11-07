@@ -55,10 +55,11 @@ public class Robot {
     public boolean shootRequested = false;
     /** Release balls regardless of readiness (driver override). */
     public boolean forceFeed = false;
-    /** Intake state when not feeding. */
+    /** Intake state when not feeding. OUTTAKE always wins: it cancels any feed and closes the gate. */
     public Intake.State intakeRequest = Intake.State.OFF;
 
     private boolean feeding = false;
+    private boolean readyToShoot = false;
 
     /**
      * @param resetTurret true to zero the turret encoder now (turret must face forward).
@@ -115,7 +116,9 @@ public class Robot {
         boolean aimed = !autoAim || (aimer.hasTarget()
                 && Math.abs(turret.getTargetDeg() - turret.getAngleDeg()) <= AIM_TOLERANCE_DEG
                 && !turret.isClamped());
-        feeding = forceFeed || (shootRequested && shooterOn && shooter.isReady() && aimed);
+        readyToShoot = shooterOn && shooter.isReady() && aimed;
+        boolean outtaking = intakeRequest == Intake.State.OUTTAKE;
+        feeding = !outtaking && (forceFeed || (shootRequested && readyToShoot));
         gate.set(feeding);
         intake.set(feeding ? Intake.State.FEED : intakeRequest);
 
@@ -127,6 +130,8 @@ public class Robot {
     }
 
     public boolean isFeeding() { return feeding; }
+    /** Flywheel at speed AND turret on target (or auto-aim off): a shot would be released now. */
+    public boolean isReadyToShoot() { return readyToShoot; }
 
     public void stop() {
         shooterOn = false;

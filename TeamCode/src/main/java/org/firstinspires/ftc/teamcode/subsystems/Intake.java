@@ -15,7 +15,7 @@ public class Intake {
     public static boolean REVERSED = false; // TODO(verify) + power must pull balls in
     public static double INTAKE_POWER = 1.0;
     public static double FEED_POWER = 0.8;  // when pushing balls past the open gate into the flywheel
-    public static double OUTTAKE_POWER = -0.6;
+    public static double OUTTAKE_POWER = -0.6; // reverse: spits balls back out the front (clears jams)
 
     public enum State { OFF, INTAKE, FEED, OUTTAKE }
 
