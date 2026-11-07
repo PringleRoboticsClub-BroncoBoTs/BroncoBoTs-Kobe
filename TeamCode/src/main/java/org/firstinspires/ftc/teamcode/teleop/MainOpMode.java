@@ -24,10 +24,7 @@ public class MainOpMode extends OpMode {
 
     // ********** MECHANISMS **********
     private DcMotor intakeMotor;        // "IntakeMotor"
-    private DcMotor shooterMotor;         // "shooterMotor"
-    private DcMotor intakeRampMotor;    // "RampMotor"
-    private DcMotor stageMotor;   // Stage Motor
-    private Servo shooterGate;      // ShooterGate
+    private DcMotor shooterMotor;         // "shooterMotor"\
 
     // ********** IMU / FIELD-CENTRIC **********
     private IMU imu;
@@ -107,7 +104,7 @@ public class MainOpMode extends OpMode {
         updateIntakeStage(finalIntake, rightTrigger);
 
         // Field-centric drive
-        driveFieldCentric(x, y, rx, autoRotate);
+        driveFieldCentric(x, y, rx, 0);
 
         sendTelemetry();
 
@@ -149,22 +146,12 @@ public class MainOpMode extends OpMode {
     private void initMechanisms(HardwareMap hw) {
         shooterMotor    = hw.get(DcMotor.class, "shooterMotor");
         intakeMotor     = hw.get(DcMotor.class,   "intakeMotor");
-        intakeRampMotor = hw.get(DcMotor.class,   "intakeRampMotor");
-        shooterGate       = hw.get(Servo.class,     "shooterGate");
 
         shooterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        // shooterMotor.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(kP, kI, kD, kF));
-
-        // shooterMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        intakeRampMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         intakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        intakeRampMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        // shooterGate.scaleRange(0.0, 0.5);
-        shooterGate.setPosition(0.5);
     }
 
     private void initImu(HardwareMap hw) {
@@ -241,7 +228,6 @@ public class MainOpMode extends OpMode {
             // Shooter idle
             shooterTargetVelocity = 0.0;
             // shooterMotor.setVelocity(200);
-            shooterGate.setPosition(0.5);
             return 0.0;
         }
 
@@ -312,13 +298,10 @@ public class MainOpMode extends OpMode {
         if (!leftBumper && rightTrigger > 0.05) {
             intakePower = 0.5;
             rampPower   = 0.7;
-            shooterGate.setPosition(0.0);
         } else {
-            shooterGate.setPosition(0.5);
         }
 
         intakeMotor.setPower(intakePower);
-        intakeRampMotor.setPower(rampPower);
     }
 
     private void driveFieldCentric(double x, double y, double rx, double autoRotate) {
@@ -357,7 +340,7 @@ public class MainOpMode extends OpMode {
         telemetry.addData("Shooter target vel", shooterTargetVelocity);
         telemetry.addData("Shooter power", shooterMotor.getPower());
         telemetry.addData("Intake power", intakeMotor.getPower());
-        telemetry.addData("Ramp power", intakeRampMotor.getPower());
+        telemetry.addData("Ramp power", 0);
         telemetry.update();
     }
 
@@ -397,7 +380,6 @@ public class MainOpMode extends OpMode {
     private void stopMechanisms() {
         shooterMotor.setPower(0);
         intakeMotor.setPower(0);
-        intakeRampMotor.setPower(0);
     }
 
     private void setDriveZeroPower() {
