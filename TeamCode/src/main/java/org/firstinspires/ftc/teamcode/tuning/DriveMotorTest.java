@@ -39,7 +39,7 @@ import org.firstinspires.ftc.teamcode.subsystems.Drivetrain;
  *                          "IMU yaw" must INCREASE (about +90 after a quarter turn).
  */
 @Config
-@TeleOp(name = "Tune: Drive Motors", group = "Tuning")
+@TeleOp(name = "Tune: Drive Motors", group = "Tuning") // BIOBUZZ robot; TurboBoTs uses TurboBoTsDriveMotorTest
 public class DriveMotorTest extends OpMode {
     public static double TEST_POWER = 0.3;
     public static double STICK_SCALE = 0.5;
@@ -58,6 +58,7 @@ public class DriveMotorTest extends OpMode {
         drive = new Drivetrain(hardwareMap);
         drive.stop();
         for (int i = 0; i < 4; i++) motors[i] = hardwareMap.get(DcMotor.class, NAMES[i]);
+        applyDirections(motors);
 
         telemetry.addLine("WHEEL TEST on blocks: hold L1 / R1 / L2 / R2 for one wheel, CROSS for all.");
         telemetry.addLine("STICK TEST on the floor: use the sticks (robot-centric, half power).");
@@ -102,6 +103,12 @@ public class DriveMotorTest extends OpMode {
         }
         telemetry.update();
     }
+
+    /**
+     * Hook for another robot to use its own wheel directions (order: frontLeft, frontRight,
+     * backLeft, backRight). Default: keep the BIOBUZZ Drivetrain directions.
+     */
+    protected void applyDirections(DcMotor[] motors) {}
 
     @Override
     public void stop() {

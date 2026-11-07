@@ -45,10 +45,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 @TeleOp(name = "TurboBoTsTeleop", group = "TurboBoTs")
 public class TurboBoTsTeleOp extends OpMode {
     // Motor directions: + power must drive the robot FORWARD / pull balls IN / shoot OUT.
-    public static DcMotorSimple.Direction FRONT_LEFT_DIR  = DcMotorSimple.Direction.REVERSE; // TODO(verify)
-    public static DcMotorSimple.Direction BACK_LEFT_DIR   = DcMotorSimple.Direction.REVERSE; // TODO(verify)
-    public static DcMotorSimple.Direction FRONT_RIGHT_DIR = DcMotorSimple.Direction.FORWARD; // TODO(verify)
-    public static DcMotorSimple.Direction BACK_RIGHT_DIR  = DcMotorSimple.Direction.FORWARD; // TODO(verify)
+    public static DcMotorSimple.Direction FRONT_LEFT_DIR  = DcMotorSimple.Direction.FORWARD; // flipped after drive motor test
+    public static DcMotorSimple.Direction BACK_LEFT_DIR   = DcMotorSimple.Direction.REVERSE;
+    public static DcMotorSimple.Direction FRONT_RIGHT_DIR = DcMotorSimple.Direction.FORWARD;
+    public static DcMotorSimple.Direction BACK_RIGHT_DIR  = DcMotorSimple.Direction.REVERSE; // flipped after drive motor test
     public static DcMotorSimple.Direction SHOOTER_DIR     = DcMotorSimple.Direction.FORWARD; // TODO(verify)
     public static DcMotorSimple.Direction INTAKE_DIR      = DcMotorSimple.Direction.FORWARD; // TODO(verify)
 
