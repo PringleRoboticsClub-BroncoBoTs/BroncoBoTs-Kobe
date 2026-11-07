@@ -136,6 +136,16 @@ Only gamepad 1 drives. Either gamepad can run the intake, shooter and gate. Ther
 
 The gate homes to 0 at INIT.
 
+## 3c. Simple Auto (`Simple Auto`, main robot)
+
+A basic autonomous with no Pedro, Pinpoint, camera or turret:
+1. Spin up the shooter at Simple TeleOp's power (45%) and wait 3 s.
+2. Open the gate and run the intake (100%) for 5 s to shoot the preloads.
+3. Stop the shooter and intake, and close the gate.
+4. Drive forward 1 ft (12 in) on the drive-motor encoders.
+
+It preselects `Simple TeleOp`. The encoder distance assumes goBILDA 312 RPM motors (537.7 ticks/rev) and 104 mm wheels. If 1 ft comes out wrong, set `DRIVE_TICKS_PER_REV` / `WHEEL_DIAMETER_MM`. Times, distance and power are on the Dashboard "SimpleAuto" card.
+
 ## 4. How aiming works
 
 - SDK 12 groups the BIOBUZZ scoring tags into **clusters**. A cluster's origin is the centre of the Cell opening.
@@ -165,7 +175,7 @@ The TurboBoTs robot is a **separate robot** that runs only `TurboBoTsTeleop` (`t
 - **Controls**, either gamepad (driver or operator):
   - L2 (hold): intake
   - L1 (hold): outtake
-  - R2 (hold): shooter at `SHOOTER_POWER` (35%)
+  - R2 (hold): shooter at `SHOOTER_POWER` (70%)
 - **First run:**
   1. Check each motor's direction. Driving forward must move the robot forward, L2 must pull balls in, and R2 must shoot out.
   2. Check the drive wheels with **`TurboBoTs: Drive Motors`**. It has the same buttons as `Tune: Drive Motors`, but uses this robot's directions. Don't use `Tune: Drive Motors` on this robot: it shows the BIOBUZZ robot's directions.
@@ -175,6 +185,13 @@ The TurboBoTs robot is a **separate robot** that runs only `TurboBoTsTeleop` (`t
      - Test it: turn the robot 90° counter-clockwise. The `heading` in telemetry should read about +90.
      - Push the stick forward. The robot should drive away from you whichever way it faces.
   4. Copy the final values into the file.
+- **Autonomous: `TurboBoTsAuto`**. It preselects `TurboBoTsTeleop`.
+  1. Spin up the shooter at 70% and wait 3 s.
+  2. Run the intake (90%) for 5 s.
+  3. Stop both.
+  4. Drive forward 1 ft on the drive-motor encoders.
+
+  It uses the same motor directions and powers as `TurboBoTsTeleop`. Encoder distance assumes goBILDA 312 RPM motors (537.7 ticks/rev) and 104 mm wheels. Adjust `DRIVE_TICKS_PER_REV` / `WHEEL_DIAMETER_MM` on the "TurboBoTsAuto" card if 1 ft comes out wrong.
 - The other OpModes still show up on that robot's Driver Station, because it's the same app. Don't run them there: they need hardware the TurboBoTs robot doesn't have.
 
 ## 7. Legacy code

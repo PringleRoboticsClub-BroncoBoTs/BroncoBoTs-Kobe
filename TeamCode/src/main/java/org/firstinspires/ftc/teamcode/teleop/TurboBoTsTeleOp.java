@@ -57,7 +57,7 @@ public class TurboBoTsTeleOp extends OpMode {
     public static double DRIVE_SPEED = 1.0;     // scale on all drive power (lower for gentler driving)
     public static double INTAKE_POWER = 0.9;
     public static double OUTTAKE_POWER = 0.6;
-    public static double SHOOTER_POWER = 0.35;  // TODO(tune)
+    public static double SHOOTER_POWER = 0.70;
 
     // Field-centric
     public static boolean START_FIELD_CENTRIC = false;
