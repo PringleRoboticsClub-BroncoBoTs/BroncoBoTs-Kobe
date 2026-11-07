@@ -12,8 +12,8 @@ import org.firstinspires.ftc.teamcode.config.RobotConfig;
 /** Intake roller: goBILDA 5203 1620/1650 RPM (3.7:1). Also feeds balls up to the turret. */
 @Config
 public class Intake {
-    public static boolean REVERSED = false; // TODO(verify) + power must pull balls in
-    public static double INTAKE_POWER = 1.0;
+    public static boolean REVERSED = true;  // motor was spinning backwards; + power must pull balls in
+    public static double INTAKE_POWER = 0.9;
     public static double FEED_POWER = 0.8;  // when pushing balls past the open gate into the flywheel
     public static double OUTTAKE_POWER = -0.6; // reverse: spits balls back out the front (clears jams)
 
