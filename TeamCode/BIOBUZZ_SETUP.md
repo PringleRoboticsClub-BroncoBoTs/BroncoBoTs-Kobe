@@ -24,35 +24,41 @@ Names must match exactly. They're defined in `config/RobotConfig.java`.
 
 Look for `TODO(tune)` / `TODO(measure)` / `TODO(verify)` in the code. Every one of these is a placeholder.
 
-1. **Servo positions**: run `Tune: Servo Positions`. Align both arm servos first, then set `Arm.STOWED/DEPLOYED` and `Gate.OPEN/CLOSED`.
-2. **Turret: wiring safety first.** Run `Tune: Turret` with the turret facing forward at INIT.
+1. **Drive motor wiring**: put the robot on blocks and run `Tune: Drive Motors`.
+   - Hold L1 / R1 / L2 / R2 to spin frontLeft / frontRight / backLeft / backRight. CROSS spins all four.
+   - Each button must spin the wheel it names, in the forward direction.
+   - **Wrong wheel:** swap those two names in the Driver Station configuration, or swap the cables on the hub.
+   - **Right wheel, spinning backwards:** change that motor's direction in both `Drivetrain` and `pedro/Constants.java`.
+   - Current config: port 0 `frontRight`, 1 `frontLeft`, 2 `backRight`, 3 `backLeft`.
+2. **Servo positions**: run `Tune: Servo Positions`. Align both arm servos first, then set `Arm.STOWED/DEPLOYED` and `Gate.OPEN/CLOSED`.
+3. **Turret: wiring safety first.** Run `Tune: Turret` with the turret facing forward at INIT.
    - In CALIBRATE mode (motor off), turn the turret by hand:
      - CCW seen from above must read **positive**. If it doesn't, flip `Turret.MOTOR_REVERSED`.
      - Turning it 90° by hand must read about 90. If it doesn't, fix `MOTOR_REVS_PER_TURRET_REV`, the motor-to-turret gearing.
    - Turn it each way until the wires are snug. Set `MIN_DEG` / `MAX_DEG` a few degrees inside those points.
    - STEP mode: tune `kP`, then `kD`, then `kS`. Graph `turret/targetDeg` against `turret/angleDeg`.
    - SWEEP mode: the turret must stop at a limit and then **unwind the long way**. It must never cross the dead zone.
-3. **Flywheel**:
+4. **Flywheel**:
    1. Run `Tune: Flywheel FF Characterize` and copy the resulting `kV` and `kS` into `Shooter`.
    2. Run `Tune: Flywheel`.
    3. On FTC Dashboard, graph `shooter/targetRpm`, `shooter/rpm` and `shooter/power`.
    4. Use X for step mode. Raise `kP` until the wheel recovers quickly after a shot (hold RB to feed) without oscillating.
    5. Add a small `kI` only if a steady error remains.
-4. **Pedro Pathing**:
+5. **Pedro Pathing**:
    1. Open the AutoTune web UI at `http://192.168.43.1:10158`.
    2. Run, in order: Mecanum Tuner, Pinpoint Tuner, Foresight Tuner.
    3. Paste each generated config into `pedro/Constants.java`.
    4. Verify with Tests (Line, Curve, Hold).
-5. **Vision + aim**: run `Tune: Vision + Auto-Aim`.
+6. **Vision + aim**: run `Tune: Vision + Auto-Aim`.
    - Measure `TurretAimer.TURRET_X/Y_IN` and `CAM_FORWARD/LEFT_IN`. Set `CAMERA_ON_TURRET`.
    - Calibrate the camera and fill in `GoalVision.FX/FY/CX/CY`. Without this, distances will be wrong.
    - Set `EXPOSURE_MS` / `GAIN` for the venue.
    - Press A to enable the turret, then push and spin the robot: the turret should stay locked.
-6. **Shot table**:
+7. **Shot table**:
    1. Shoot from several distances. Use `aim/distanceIn` from telemetry.
    2. Record the best RPM at each distance.
    3. Fill in `Shooter.SHOT_DISTANCE_IN` / `SHOT_RPM`.
-7. **Auto poses**: measure the RED poses in `BioBuzzAuto`. They're relative to the start pose. BLUE mirrors them automatically.
+8. **Auto poses**: measure the RED poses in `BioBuzzAuto`. They're relative to the start pose. BLUE mirrors them automatically.
 
 FTC Dashboard is at `http://192.168.43.1:8080/dash`. All `@Config` values can be edited live there. **Live edits are lost on restart, so copy final values into the code.**
 
