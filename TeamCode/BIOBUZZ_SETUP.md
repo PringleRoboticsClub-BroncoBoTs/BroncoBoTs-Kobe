@@ -127,8 +127,10 @@ Only gamepad 1 drives. Either gamepad can run the intake, shooter and gate. Ther
 
 | Gamepad | Control | Action |
 |---|---|---|
-| 1 | Left stick | drive (robot-centric: forward is always the robot's front) |
+| 1 | Left stick | drive. Field-centric by default: forward is away from the driver, set at INIT |
 | 1 | Right stick X | rotate |
+| 1 | SHARE | switch field-centric / robot-centric |
+| 1 | OPTIONS (hold 0.75 s) | reset field-forward to the way the robot faces now |
 | 1 or 2 | L2 (hold) | intake |
 | 1 or 2 | L1 (hold) | outtake (wins over intake) |
 | 1 or 2 | R2 (hold) | shooter motor at 45% (`SimpleTeleOp.SHOOTER_POWER`) |
@@ -176,6 +178,8 @@ The TurboBoTs robot is a **separate robot** that runs only `TurboBoTsTeleop` (`t
   - L2 (hold): intake
   - L1 (hold): outtake
   - R2 (hold): shooter at `SHOOTER_POWER` (70%)
+- **Controls**, gamepad 2 only:
+  - R1 (hold): shooter in **reverse** at `SHOOTER_REVERSE_POWER` (70%) to clear a jam. Overrides R2.
 - **First run:**
   1. Check each motor's direction. Driving forward must move the robot forward, L2 must pull balls in, and R2 must shoot out.
   2. Check the drive wheels with **`TurboBoTs: Drive Motors`**. It has the same buttons as `Tune: Drive Motors`, but uses this robot's directions. Don't use `Tune: Drive Motors` on this robot: it shows the BIOBUZZ robot's directions.

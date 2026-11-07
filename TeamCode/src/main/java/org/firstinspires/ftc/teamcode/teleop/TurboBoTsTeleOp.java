@@ -36,6 +36,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  *   L1 (hold)       outtake (wins over intake)
  *   R2 (hold)       shooter at SHOOTER_POWER
  *
+ * gamepad2 only (operator):
+ *   R1 (hold)       shooter in REVERSE at SHOOTER_REVERSE_POWER (to clear a jam); wins over R2
+ *
  * Field-centric: the robot must face AWAY from the driver when INIT is pressed (or hold OPTIONS
  * later to re-define forward). HUB_LOGO / HUB_USB must match how this robot's Control Hub is
  * mounted, otherwise field-centric drive is rotated.
@@ -58,6 +61,7 @@ public class TurboBoTsTeleOp extends OpMode {
     public static double INTAKE_POWER = 0.9;
     public static double OUTTAKE_POWER = 0.6;
     public static double SHOOTER_POWER = 0.70;
+    public static double SHOOTER_REVERSE_POWER = 0.70;
 
     // Field-centric
     public static boolean START_FIELD_CENTRIC = false;
@@ -94,6 +98,7 @@ public class TurboBoTsTeleOp extends OpMode {
         telemetry.addLine("TurboBoTs TeleOp ready.");
         telemetry.addLine("GP1: L stick drive | R stick rotate | SHARE robot/field-centric | hold OPTIONS reset forward");
         telemetry.addLine("GP1 or GP2: L2 intake | L1 outtake | R2 shooter");
+        telemetry.addLine("GP2: R1 shooter reverse");
         if (imu == null) telemetry.addLine("No 'imu' in config: field-centric unavailable.");
         else telemetry.addLine("Field-centric forward = the way the robot faces NOW.");
         telemetry.update();
@@ -140,13 +145,16 @@ public class TurboBoTsTeleOp extends OpMode {
         }
 
         // ---- shooter ----
-        boolean shooterOn = gamepad1.right_trigger > 0.1 || gamepad2.right_trigger > 0.1;
-        shooter.setPower(shooterOn ? Range.clip(SHOOTER_POWER, 0, 1) : 0);
+        boolean shooterReverse = gamepad2.right_bumper;
+        boolean shooterOn = !shooterReverse && (gamepad1.right_trigger > 0.1 || gamepad2.right_trigger > 0.1);
+        if (shooterReverse) shooter.setPower(-Range.clip(SHOOTER_REVERSE_POWER, 0, 1));
+        else shooter.setPower(shooterOn ? Range.clip(SHOOTER_POWER, 0, 1) : 0);
 
         telemetry.addData("Drive", imu == null ? "ROBOT-centric (no IMU)"
                 : fieldCentric ? String.format("FIELD-centric  heading %.0f deg", headingDeg) : "ROBOT-centric");
         telemetry.addData("Intake", intakeState);
-        telemetry.addData("Shooter", shooterOn ? String.format("ON %.0f%%", SHOOTER_POWER * 100) : "off");
+        telemetry.addData("Shooter", shooterReverse ? String.format("REVERSE %.0f%%", SHOOTER_REVERSE_POWER * 100)
+                : shooterOn ? String.format("ON %.0f%%", SHOOTER_POWER * 100) : "off");
         telemetry.addData("Drive FL/FR/BL/BR", "%+.2f %+.2f %+.2f %+.2f",
                 frontLeft.getPower(), frontRight.getPower(), backLeft.getPower(), backRight.getPower());
         telemetry.update();
