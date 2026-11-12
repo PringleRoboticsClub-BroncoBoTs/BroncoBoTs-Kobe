@@ -1,0 +1,205 @@
+# BIOBUZZ (2026-27) Robot Code: Setup & Tuning
+
+Branch: `biobuzz-integration`. It's built on `program_drivetrain` and uses FTC SDK **12.0**, Pedro Pathing **3.0.2** and FTC Dashboard **0.5.1**.
+
+Requires **Android Studio Narwhal 3 Feature Drop or later**, because SDK 12 uses Gradle 9.1 and AGP 8.13.2. Older Android Studio will offer to downgrade AGP. **Don't accept that.**
+
+## 1. Driver Station robot configuration
+
+Names must match exactly. They're defined in `config/RobotConfig.java`.
+
+| Name | Type | Hardware |
+|---|---|---|
+| `frontLeft` `frontRight` `backLeft` `backRight` | goBILDA 5202/3/4 motor | drivetrain (same as `program_drivetrain`) |
+| `shooterMotor` | goBILDA 5202/3/4 motor | 6000 RPM flywheel motor (encoder cable required) |
+| `turretMotor` | goBILDA 5202/3/4 motor | 5203 117 RPM turret motor (encoder cable required) |
+| `intakeMotor` | goBILDA 5202/3/4 motor | 1620/1650 RPM intake |
+| `armLeft` `armRight` | Servo | front arm pair |
+| `gateServo` | Servo | turret ball gate |
+| `pinpoint` | goBILDA Pinpoint Odometry Computer (I2C) | odometry |
+| `imu` | REV internal IMU | field-centric drive. Control Hub mounted flat, label **up**, USB ports toward the **back**. If you remount it, update `Drivetrain.HUB_LOGO` / `HUB_USB` |
+| `Webcam 1` | Webcam | global-shutter USB camera |
+
+## 2. Bring-up order (first time on the robot)
+
+Look for `TODO(tune)` / `TODO(measure)` / `TODO(verify)` in the code. Every one of these is a placeholder.
+
+1. **Drive motor wiring**: put the robot on blocks and run `Tune: Drive Motors`.
+   - Hold L1 / R1 / L2 / R2 to spin frontLeft / frontRight / backLeft / backRight. CROSS spins all four.
+   - Each button must spin the wheel it names, in the forward direction.
+   - **Wrong wheel:** swap those two names in the Driver Station configuration, or swap the cables on the hub.
+   - **Right wheel, spinning backwards:** flip that wheel's `*_DIR` setting in `Drivetrain`. Pedro uses the same values. You can try it live on FTC Dashboard (Drivetrain card), then re-init the OpMode.
+   - Current config: port 0 `frontRight`, 1 `frontLeft`, 2 `backRight`, 3 `backLeft`.
+   - **Stick test** (on the floor, no buttons held). The sticks drive robot-centric at half power:
+     - Left stick right must strafe right without turning.
+     - Right stick right must turn clockwise in place.
+     - If either is wrong, the mecanum wheels are on the wrong corners. Seen from above, the rollers must form an **X**.
+     - TRIANGLE switches to field-centric. If only field-centric is wrong, check the IMU: turning the robot counter-clockwise must make `IMU yaw` go **up**.
+2. **Servo positions**: run `Tune: Servo Positions`. Align both arm servos first, then set `Arm.STOWED/DEPLOYED`. The gate's home is servo position 0 (`Gate.CLOSED`). It opens `Gate.OPEN_DEG` (30°) to the left, worked out from `Gate.SERVO_RANGE_DEG` (300° for a goBILDA 2000-series servo).
+3. **Turret: wiring safety first.** Run `Tune: Turret` with the turret facing forward at INIT.
+   - In CALIBRATE mode (motor off), turn the turret by hand:
+     - CCW seen from above must read **positive**. If it doesn't, flip `Turret.MOTOR_REVERSED`.
+     - Turning it 90° by hand must read about 90. If it doesn't, fix `MOTOR_REVS_PER_TURRET_REV`, the motor-to-turret gearing.
+   - Turn it each way until the wires are snug. Set `MIN_DEG` / `MAX_DEG` a few degrees inside those points.
+   - **Validate the limits** with `Tune: Turret Limits`. Start it with the turret facing forward.
+     - Hold **L1** to turn slowly to `MIN_DEG`, **R1** to turn slowly to `MAX_DEG`, and **CROSS** to come back to 0.
+     - Release any button and the turret holds where it is.
+     - At each limit, the wires must still have slack. If they don't, tighten the limit on the Dashboard "Turret" card. It takes effect immediately.
+     - If the turret turns the wrong way or jams, the test cuts the motor.
+   - STEP mode: tune `kP`, then `kD`, then `kS`. Graph `turret/targetDeg` against `turret/angleDeg`.
+   - SWEEP mode: the turret must stop at a limit and then **unwind the long way**. It must never cross the dead zone.
+4. **Flywheel**:
+   1. Run `Tune: Flywheel FF Characterize` and copy the resulting `kV` and `kS` into `Shooter`.
+   2. Run `Tune: Flywheel`.
+   3. On FTC Dashboard, graph `shooter/targetRpm`, `shooter/rpm` and `shooter/power`.
+   4. Use X for step mode. Raise `kP` until the wheel recovers quickly after a shot (hold RB to feed) without oscillating.
+   5. Add a small `kI` only if a steady error remains.
+5. **Pedro Pathing**:
+   1. Open the AutoTune web UI at `http://192.168.43.1:10158`.
+   2. Run, in order: Mecanum Tuner, Pinpoint Tuner, Foresight Tuner.
+   3. Paste each generated config into `pedro/Constants.java`.
+   4. Verify with Tests (Line, Curve, Hold).
+6. **Vision + aim**: run `Tune: Vision + Auto-Aim`.
+   - Measure `TurretAimer.TURRET_X/Y_IN` and `CAM_FORWARD/LEFT_IN`. Set `CAMERA_ON_TURRET`.
+   - Calibrate the camera and fill in `GoalVision.FX/FY/CX/CY`. Without this, distances will be wrong.
+   - Set `EXPOSURE_MS` / `GAIN` for the venue.
+   - Press A to enable the turret, then push and spin the robot: the turret should stay locked.
+7. **Shot table**:
+   1. Shoot from several distances. Use `aim/distanceIn` from telemetry.
+   2. Record the best RPM at each distance.
+   3. Fill in `Shooter.SHOT_DISTANCE_IN` / `SHOT_RPM`.
+8. **Auto poses**: measure the RED poses in `BioBuzzAuto`. They're relative to the start pose. BLUE mirrors them automatically.
+
+FTC Dashboard is at `http://192.168.43.1:8080/dash`. All `@Config` values can be edited live there. **Live edits are lost on restart, so copy final values into the code.**
+
+## 3. Controls (`BIOBUZZ TeleOp - RED/BLUE`)
+
+Both the driver and the operator use **Sony PS5 (DualSense) controllers**. The code uses the SDK's PlayStation button names (`cross`, `circle`, `square`, `triangle`, `share`, `options`). The PS button isn't used.
+
+Pairing on the Driver Station: hold **OPTIONS + CROSS** to make a controller gamepad 1, or **OPTIONS + CIRCLE** to make it gamepad 2.
+
+**Gamepad 1 (driver)**
+
+| Control | Action |
+|---|---|
+| Left stick / right stick X | field-centric drive (same controls as `program_drivetrain`) |
+| OPTIONS (hold 0.75 s) | reset field-forward heading |
+
+Only gamepad 1 drives.
+
+**Either gamepad (driver or operator)**
+
+| Control | Action |
+|---|---|
+| L2 (hold) | intake |
+| L1 (hold) | outtake (reverse intake). Overrides intake and any feed, so it can clear a jam |
+| R1 (hold) | **shoot**: releases balls only when the flywheel is at speed AND the turret is on target |
+
+**Gamepad 2 (operator) only**
+
+| Control | Action |
+|---|---|
+| CROSS | flywheel on/off (RPM is set automatically from distance) |
+| TRIANGLE | auto-aim on/off |
+| SQUARE | arm deploy/stow |
+| CIRCLE (hold) | force feed (skips the ready checks) |
+| Right stick X | aim trim (auto-aim on) / manual turret (auto-aim off) |
+| D-pad up/down | RPM trim ±50 |
+| D-pad left | clear trims |
+| SHARE (hold 1 s) | re-zero turret. **Only do this with the turret physically facing forward.** |
+
+**Controller feedback (both controllers)**
+
+| Lightbar | Meaning |
+|---|---|
+| Alliance colour (red/blue) | flywheel off |
+| Amber | flywheel spinning up, or turret still aiming |
+| Green | **ready**: holding R1 will release a ball now |
+| Magenta | turret parked at its wiring limit. Turn the robot toward the goal. |
+
+Both controllers give one rumble blip when the robot becomes ready to shoot.
+
+**Tuning OpModes** use gamepad 1 with the same PS names. Each one's controls are shown in its telemetry.
+
+## 3b. Simple TeleOp (`Simple TeleOp`)
+
+Only gamepad 1 drives. Either gamepad can run the intake, shooter and gate. There's no turret, vision or auto-aim, and the shooter runs at a fixed power. Use it to test the drive, intake, flywheel and gate on their own.
+
+| Gamepad | Control | Action |
+|---|---|---|
+| 1 | Left stick | drive. Field-centric by default: forward is away from the driver, set at INIT |
+| 1 | Right stick X | rotate |
+| 1 | SHARE | switch field-centric / robot-centric |
+| 1 | OPTIONS (hold 0.75 s) | reset field-forward to the way the robot faces now |
+| 1 or 2 | L2 (hold) | intake |
+| 1 or 2 | L1 (hold) | outtake (wins over intake) |
+| 1 or 2 | R2 (hold) | shooter motor at 45% (`SimpleTeleOp.SHOOTER_POWER`) |
+| 1 or 2 | D-pad up (hold) | open the shooter gate 30° left. Releasing it sends the gate back home. |
+
+The gate homes to 0 at INIT.
+
+## 3c. Simple Auto (`Simple Auto`, main robot)
+
+A basic autonomous with no Pedro, Pinpoint, camera or turret:
+1. Spin up the shooter at Simple TeleOp's power (45%) and wait 3 s.
+2. Open the gate and run the intake (100%) for 5 s to shoot the preloads.
+3. Stop the shooter and intake, and close the gate.
+4. Drive forward 1 ft (12 in) on the drive-motor encoders.
+
+It preselects `Simple TeleOp`. The encoder distance assumes goBILDA 312 RPM motors (537.7 ticks/rev) and 104 mm wheels. If 1 ft comes out wrong, set `DRIVE_TICKS_PER_REV` / `WHEEL_DIAMETER_MM`. Times, distance and power are on the Dashboard "SimpleAuto" card.
+
+## 4. How aiming works
+
+- SDK 12 groups the BIOBUZZ scoring tags into **clusters**. A cluster's origin is the centre of the Cell opening.
+- `GoalVision` follows only our alliance's cluster: `RED SCORING` or `BLUE SCORING`.
+- `TurretAimer` turns each sighting into a field position of the goal. It uses the Pinpoint pose and turret angle *from when the frame was captured*, which compensates for camera latency.
+- Every loop it re-aims from the current Pinpoint pose. This keeps the turret locked while the robot drives or spins, and for `GOAL_MEMORY_SEC` after the tags go out of view.
+- The SDK notes say BIOBUZZ tags move, so vision is **not** used for robot localization.
+
+## 5. Turret wiring safety
+
+- Travel is limited to `[MIN_DEG, MAX_DEG]`. A request for any other angle resolves to an equivalent angle inside that range.
+- If the goal is in the dead zone, the turret parks at the nearer limit and telemetry shows a warning.
+- Power ramps down near each limit, and power that would push further past a limit is cut.
+- The turret zero carries over from Auto to TeleOp through `PoseStorage.turretZeroed`. If the Robot Controller app restarts, TeleOp re-zeros at INIT, so **start TeleOp with the turret facing forward**.
+- Unit tests: `./gradlew :TeamCode:testDebugUnitTest` (`TurretSafetyTest`).
+
+## 6. TurboBoTs robot (`TurboBoTsTeleop`)
+
+The TurboBoTs robot is a **separate robot** that runs only `TurboBoTsTeleop` (`teleop/TurboBoTsTeleOp.java`). The file is self-contained: it doesn't use the BIOBUZZ subsystems or their settings, so tuning one robot can't affect the other.
+
+- **Driver Station config** on that robot: `frontLeft`, `frontRight`, `backLeft`, `backRight`, `shooterMotor`, `intakeMotor`, plus `imu`, the Control Hub's built-in IMU, for field-centric drive. Without `imu`, the robot drives robot-centric only.
+- **Controls**, gamepad 1 (driver):
+  - left stick: drive
+  - right stick X: rotate
+  - SHARE: switch between robot-centric (forward is the robot's front, the default) and field-centric (forward is away from the driver)
+  - OPTIONS (hold 0.75 s): field-centric only. Sets forward to the way the robot faces now.
+- **Controls**, either gamepad (driver or operator):
+  - L2 (hold): intake
+  - L1 (hold): outtake
+  - R2 (hold): shooter at `SHOOTER_POWER` (70%)
+- **Controls**, gamepad 2 only:
+  - R1 (hold): shooter in **reverse** at `SHOOTER_REVERSE_POWER` (70%) to clear a jam. Overrides R2.
+- **First run:**
+  1. Check each motor's direction. Driving forward must move the robot forward, L2 must pull balls in, and R2 must shoot out.
+  2. Check the drive wheels with **`TurboBoTs: Drive Motors`**. It has the same buttons as `Tune: Drive Motors`, but uses this robot's directions. Don't use `Tune: Drive Motors` on this robot: it shows the BIOBUZZ robot's directions.
+     - Current TurboBoTs directions: `frontLeft` REVERSE, `backLeft` REVERSE, `frontRight` FORWARD, `backRight` FORWARD.
+     - If anything is still wrong, flip its `*_DIR` on the Dashboard "TurboBoTsTeleOp" card, then re-init the OpMode.
+  3. Field-centric needs to know how the Control Hub is mounted. On TurboBoTs the logo faces **left** and the USB ports face the **back** (`HUB_LOGO = LEFT`, `HUB_USB = BACKWARD`).
+     - Test it: turn the robot 90° counter-clockwise. The `heading` in telemetry should read about +90.
+     - Push the stick forward. The robot should drive away from you whichever way it faces.
+  4. Copy the final values into the file.
+- **Autonomous: `TurboBoTsAuto`**. It preselects `TurboBoTsTeleop`.
+  1. Spin up the shooter at 70% and wait 3 s.
+  2. Run the intake (90%) for 5 s.
+  3. Stop both.
+  4. Drive forward 1 ft on the drive-motor encoders.
+
+  It uses the same motor directions and powers as `TurboBoTsTeleop`. Encoder distance assumes goBILDA 312 RPM motors (537.7 ticks/rev) and 104 mm wheels. Adjust `DRIVE_TICKS_PER_REV` / `WHEEL_DIAMETER_MM` on the "TurboBoTsAuto" card if 1 ft comes out wrong.
+- The other OpModes still show up on that robot's Driver Station, because it's the same app. Don't run them there: they need hardware the TurboBoTs robot doesn't have.
+
+## 7. Legacy code
+
+- `ManualDrive` (`teleop/MainOpMode`) is kept unchanged as a drivetrain-only fallback.
+- The DECODE `AutoRoutine1-4` are `@Disabled` because the hardware they use is gone.
+- `BroncoBoTAprilTagService` was patched for the SDK 12 detection API.

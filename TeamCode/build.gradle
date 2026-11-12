@@ -1,3 +1,5 @@
+apply plugin: 'com.android.application'
+
 //
 // build.gradle in TeamCode
 //
@@ -7,7 +9,6 @@
 // the build definitions, you can place those customizations in this file, but
 // please think carefully as to whether such customizations are really necessary
 // before doing so.
-
 
 // Custom definitions may go here
 
@@ -25,4 +26,9 @@ android {
 
 dependencies {
     implementation project(':FtcRobotController')
+}
+
+// Local JVM unit tests for pure logic (turret wrap safety, lookup tables): ./gradlew :TeamCode:testDebugUnitTest
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
 }
